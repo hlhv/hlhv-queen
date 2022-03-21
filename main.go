@@ -20,8 +20,8 @@ func start () {
 
         err = conf.Load()
         if err != nil {
-                scribe.PrintFatal("could not load conf: " + err.Error())
-                return
+                scribe.PrintWarning("could not load conf: " + err.Error())
+                scribe.PrintWarning("using default configuration")
         }
 
         err = wrangler.Arm()

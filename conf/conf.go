@@ -141,6 +141,7 @@ func handleKeyVal (key string, val string) {
         switch key {
                 case "alias": {
                         aliasSplit := strings.SplitN(val, "->", 2)
+                        if len(aliasSplit) < 2 { break }
                         left  := strings.TrimSpace(aliasSplit[0])
                         right := strings.TrimSpace(aliasSplit[1])
                         

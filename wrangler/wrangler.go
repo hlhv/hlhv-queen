@@ -35,7 +35,10 @@ func Arm () (err error) {
         keyPath  := conf.GetKeyPath()
         certPath := conf.GetCertPath()
         cert, err := tls.LoadX509KeyPair(certPath, keyPath)
-        if err != nil { return err }
+        if err != nil {
+                return errors.New (
+                        "certificate is not present or inaccessible")
+	}
 
         config = tls.Config { Certificates: []tls.Certificate { cert } }
 
