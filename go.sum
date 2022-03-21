@@ -1,0 +1,7 @@
+github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
+github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/hlhv/fsock v0.0.0-20220320041146-0ea1c4c1068b/go.mod h1:JZLxqhthbuj6yK9VpKT3Qx3hmhs8ofcEew/yP8E6OoQ=
+github.com/hlhv/fsock v0.0.0-20220320042454-babab2fed524 h1:5UNBqsBznALoDDhcxfTV87UhgGk87tEVh/alFvwpyHY=
+github.com/hlhv/fsock v0.0.0-20220320042454-babab2fed524/go.mod h1:JZLxqhthbuj6yK9VpKT3Qx3hmhs8ofcEew/yP8E6OoQ=
+github.com/hlhv/protocol v0.0.0-20220320060837-827ac3f7631c h1:A4mjlBpIckWCuQg3sHLv3V/tzu2wmL5/K0CRTFpAu2c=
+github.com/hlhv/protocol v0.0.0-20220320060837-827ac3f7631c/go.mod h1:coT2nFBDjAgv3vw5DsLy1lFen2e+CQUsacURJJjdnr0=
