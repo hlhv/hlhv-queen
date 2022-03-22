@@ -63,5 +63,5 @@ func WritePlaceholder (res http.ResponseWriter, req *http.Request) {
         WriteSysmsg (
                 res, req, 200,
                 "under construction",
-                "(i) this page has not been build yet. check back later!")
+                "(i) this page has not been built yet. check back later!")
 }

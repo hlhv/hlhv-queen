@@ -34,6 +34,9 @@ func NewBand (
         }
 }
 
+/* ReadParseFrame reads a single frame and parses it, separating the kind and
+ * the data.
+ */
 func (band *Band) ReadParseFrame () (
         kind protocol.FrameKind,
         data []byte,
@@ -51,7 +54,6 @@ func (band *Band) WriteMarshalFrame (frame protocol.Frame) (nn int, err error) {
         if err != nil { band.Close() }
         return
 }
-
 
 func (band *Band) Close () {
         band.open = false
