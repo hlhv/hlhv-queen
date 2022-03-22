@@ -23,7 +23,7 @@ type Cell struct {
         Reader  *fsock.Reader
         Writer  *fsock.Writer
         
-        bands      []*Band
+        bands      *list.List
         bandsMutex sync.Mutex
         waitList   chan chan *Band
         
@@ -47,6 +47,7 @@ func NewCell (
                 leash:    leash,
                 Reader:   reader,
                 Writer:   writer,
+                bands:    list.New(),
                 waitList: make(chan chan *Band, 64),
                 mounts:   list.New(),
                 sigQueue: make(chan Sig),
@@ -185,7 +186,7 @@ func (cell *Cell) Uuid () string {
  */
 func (cell *Cell) Bind (band *Band) {
         cell.bandsMutex.Lock()
-        cell.bands = append(cell.bands, band)
+        cell.bands.PushBack(band)
         cell.bandsMutex.Unlock()
 
         select {
@@ -205,13 +206,20 @@ func (cell *Cell) Bind (band *Band) {
  * The band must be manually re-locked after use! (except on error)
  */
 func (cell *Cell) Provide () (band *Band, err error) {
-        // try to find a free band
+        // try to find a free band, and while we're at it, remove ones that have
+        // been marked as closed.
         cell.bandsMutex.Lock()
-        for _, band := range(cell.bands) {
+        item := cell.bands.Front()
+        for item != nil {
+                band := item.Value.(*Band)
+                if !band.open {
+                        cell.bands.Remove(item)
+                }
                 if band.TryLock() {
                         cell.bandsMutex.Unlock()
                         return band, nil
                 }
+                item = item.Next()
         }
         cell.bandsMutex.Unlock()
 
@@ -257,8 +265,10 @@ func (cell *Cell) cleanUp () {
         
         // close all bands immediately
         cell.bandsMutex.Lock()
-        for _, band := range(cell.bands) {
-                band.Close()
+        item := cell.bands.Front()
+        for item != nil {
+                item.Value.(*Band).Close()
+                item = item.Next()
         }
         cell.bandsMutex.Unlock()
         scribe.PrintDone("cleaned up cell")

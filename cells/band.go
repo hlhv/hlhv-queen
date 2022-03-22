@@ -6,13 +6,15 @@ import (
         // "net/http"
         // "encoding/json"
         "github.com/hlhv/fsock"
+        "github.com/hlhv/protocol"
         // "github.com/hlhv/hlhv/scribe"
 )
 
 type Band struct {
         conn   net.Conn
-        Reader *fsock.Reader
-        Writer *fsock.Writer
+        reader *fsock.Reader
+        writer *fsock.Writer
+        open   bool
         lock   bool
 }
 
@@ -25,13 +27,34 @@ func NewBand (
 ) {
         return &Band {
                 conn:   conn,
-                Reader: reader,
-                Writer: writer,
+                reader: reader,
+                writer: writer,
+                open:   true,
                 lock:   false,
         }
 }
 
+func (band *Band) ReadParseFrame () (
+        kind protocol.FrameKind,
+        data []byte,
+        err error,
+) {
+        kind, data, err = protocol.ReadParseFrame(band.reader)
+        if err != nil { band.Close() }
+        return
+}
+
+/* WriteMarshalFrame marshals and writes a Frame.
+ */
+func (band *Band) WriteMarshalFrame (frame protocol.Frame) (nn int, err error) {
+        nn, err = protocol.WriteMarshalFrame(band.writer, frame)
+        if err != nil { band.Close() }
+        return
+}
+
+
 func (band *Band) Close () {
+        band.open = false
         band.conn.Close()
 }
 
