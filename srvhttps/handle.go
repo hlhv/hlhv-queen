@@ -2,7 +2,7 @@ package srvhttps
 
 import (
         "net/http"
-        "github.com/hlhv/hlhv/scribe"
+        "github.com/hlhv/scribe"
 )
 
 func WriteSysmsg (

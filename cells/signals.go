@@ -2,7 +2,7 @@ package cells
 
 import (
         "github.com/hlhv/protocol"
-        "github.com/hlhv/hlhv/scribe"
+        "github.com/hlhv/scribe"
 )
 
 type Sig int

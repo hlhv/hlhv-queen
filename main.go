@@ -1,8 +1,8 @@
 package main
 
 import (
+        "github.com/hlhv/scribe"
         "github.com/hlhv/hlhv/conf"
-        "github.com/hlhv/hlhv/scribe"
         "github.com/hlhv/hlhv/srvhttps"
         "github.com/hlhv/hlhv/wrangler"
 )

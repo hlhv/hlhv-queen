@@ -9,8 +9,8 @@ import (
         "strings"
         "net/url"
         "net/http"
+        "github.com/hlhv/scribe"
         "github.com/hlhv/hlhv/conf"
-        "github.com/hlhv/hlhv/scribe"
 )
 
 /* This code was originally taken from the http package source, and modified to

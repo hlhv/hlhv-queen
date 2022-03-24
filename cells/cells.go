@@ -5,13 +5,15 @@ import (
         "fmt"
         "net"
         "sync"
+        "time"
         "errors"
+        "strconv"
         "net/http"
         "encoding/json"
         "container/list"
         "github.com/hlhv/fsock"
         "github.com/hlhv/protocol"
-        "github.com/hlhv/hlhv/scribe"
+        "github.com/hlhv/scribe"
         "github.com/hlhv/hlhv/srvhttps"
 )
 
@@ -157,22 +159,174 @@ func (cell *Cell) Unmount (pattern string) (err error) {
         return nil
 }
 
+/* HandleHTTP handles an http request directed at this cell. It selects a free
+ * band, and then uses it to inform the cell of a new request and it pipes the
+ * response back to the client.
+ */
 func (cell *Cell) HandleHTTP (
         res http.ResponseWriter,
         req *http.Request,
 ) {
-        band, err := cell.Provide()
         scribe.PrintInfo("handling http request")
+
+        nPort, _ := strconv.Atoi(req.URL.Port())
+        frameHead := &protocol.FrameHTTPReqHead {
+                RemoteAddr: "",
+                Method:     req.Method,
+                Scheme:     req.URL.Scheme,
+                Host:       req.URL.Hostname(),
+                Port:       nPort,
+                Path:       req.URL.Path,
+                Fragment:   req.URL.Fragment,
+                Query:      (map[string] []string)(req.URL.Query()),
+                Proto:      req.Proto,
+                ProtoMajor: req.ProtoMajor,
+                ProtoMinor: req.ProtoMinor,
+                Headers:    (map[string] []string)(req.Header),
+                Form:       nil, // TODO
+        }
+
+        var band *Band
+        var err  error
+
+        defer func () {
+                if band != nil { band.Unlock() }
+        } ()
+
+        // get a band, and use it to send the request to the cell. if it didn't
+        // work, mark the band as closed and get a new one.
+        scribe.PrintProgress("sending header to cell")
+        for {
+                band, err = cell.Provide()
+                if err != nil {
+                        err = errors.New(fmt.Sprint("server overload:", err))
+                        scribe.PrintError(err)
+                        srvhttps.WriteServUnavail(res, req, err)
+                        return
+                }
+         
+                _, err = band.WriteMarshalFrame(frameHead)
+                if err == nil { break }
+                band.Close()
+                scribe.PrintInfo("detected closed band, asking for new one")
+                
+        }
+
+        // write body to cell
+        scribe.PrintProgress("sending body to cell")
+        for {
+                data := make([]byte, 1024)
+                _, err := req.Body.Read(data)
+                if err != nil { break }
+                
+                _, err = band.writer.WriteFrame (
+                        append (
+                                []byte { byte(protocol.FrameKindHTTPReqBody) },
+                                data...
+                        ),
+                )
+                
+                if err != nil {
+                        band.Close()
+                        err = errors.New (fmt.Sprint (
+                                "band closed abruptly:", err))
+                        scribe.PrintError(err)
+                        srvhttps.WriteBadGateway(res, req, err)
+                        return
+                }
+        }
+
+        // write end to cell
+        scribe.PrintProgress("sending end to cell")
+        _, err = band.WriteMarshalFrame(&protocol.FrameHTTPReqEnd {})
         if err != nil {
-                scribe.PrintError("server overload:", err)
-                srvhttps.WriteServUnavail(res, req, err)
+                band.Close()
+                err = errors.New(fmt.Sprint("band closed abruptly: ", err))
+                scribe.PrintError(err)
+                srvhttps.WriteBadGateway(res, req, err)
                 return
         }
 
-        srvhttps.WritePlaceholder(res, req)
-        // TODO: perform http request
+        // read head from cell
+        scribe.PrintProgress("reading head from cell")
+        kind, data, err := band.ReadParseFrame()
+        if err != nil {
+                band.Close()
+                scribe.PrintError(err)
+                srvhttps.WriteBadGateway(res, req, err)
+                return
+        }
 
-        band.Unlock()
+        if kind != protocol.FrameKindHTTPResHead {
+                band.Close()
+                err = errors.New (fmt.Sprint (        
+                        "band sent unknown code ", kind, ", expecting response",
+                        "head"))
+                scribe.PrintError(err)
+                srvhttps.WriteBadGateway(res, req, err)
+                return
+        }
+
+        // parse head
+        resHead := &protocol.FrameHTTPResHead {}
+        err = json.Unmarshal(data, resHead)
+
+        if resHead.StatusCode < 200 {
+                err = errors.New (fmt.Sprint (        
+                        "band sent bad status code ", resHead.StatusCode))
+                scribe.PrintError(err)
+                srvhttps.WriteBadGateway(res, req, err)
+                return
+        }
+
+        // write headers
+        scribe.PrintProgress("sending head")
+        for key, values := range(resHead.Headers) {
+                // each key may have multiple values
+                for _, value := range(values) {
+                        res.Header().Add(key, value)
+                }
+        }
+        // write status code
+        res.WriteHeader(resHead.StatusCode)
+
+        // pipe body from cell to client
+        scribe.PrintProgress("piping body from cell")
+        for {
+                kind, data, err := band.ReadParseFrame()
+                if err != nil {
+                        band.Close()
+                        err = errors.New (fmt.Sprint (
+                                "band closed abruptly: ", err))
+                        scribe.PrintError(err)
+                        srvhttps.WriteBadGateway(res, req, err)
+                        return
+                }
+
+                if kind == protocol.FrameKindHTTPResEnd {
+                        scribe.PrintDone("http request done")
+                        return
+                }
+
+                if kind != protocol.FrameKindHTTPResBody {
+                band.Close()
+                        err = errors.New (fmt.Sprint (        
+                                "band sent unknown code ", kind, ", expecting",
+                                "response body"))
+                        scribe.PrintError(err)
+                        srvhttps.WriteBadGateway(res, req, err)
+                        return
+                }
+
+                _, err = res.Write(data)
+                if err != nil {
+                        err = errors.New (fmt.Sprint (        
+                                "http request mysteriously died: ", err))
+                        scribe.PrintError(err)
+                        return
+                }
+        }
+
         return
 }
 
@@ -212,10 +366,7 @@ func (cell *Cell) Provide () (band *Band, err error) {
         item := cell.bands.Front()
         for item != nil {
                 band := item.Value.(*Band)
-                if !band.open {
-                        cell.bands.Remove(item)
-                }
-                if band.TryLock() {
+                if band.open && band.TryLock() {
                         cell.bandsMutex.Unlock()
                         return band, nil
                 }
@@ -242,6 +393,35 @@ func (cell *Cell) Provide () (band *Band, err error) {
         }
 
         return band, nil
+}
+
+/* Prune removes bands that haven't been used in a while, or have been marked as
+ * closed.
+ */
+func (cell *Cell) Prune () (pruned int) {
+        cell.bandsMutex.Lock()
+        defer cell.bandsMutex.Unlock()
+
+        now := time.Now()
+        threshold := now.Add(-1 * time.Minute)
+        
+        item := cell.bands.Front()
+        for item != nil {
+                band := item.Value.(*Band)
+                
+                if band.lastUsed.Before(threshold) {
+                        band.Close()
+                }
+                
+                if !band.open {
+                        cell.bands.Remove(item)
+                        pruned ++
+                }
+                
+                item = item.Next()
+        }
+
+        return
 }
 
 /* cleanUp should be called when the leash closes, and only when the leash

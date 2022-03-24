@@ -8,7 +8,7 @@ import (
         "strings"
         "strconv"
         "unicode"
-        "github.com/hlhv/hlhv/scribe"
+        "github.com/hlhv/scribe"
 )
 
 type databaseType struct {

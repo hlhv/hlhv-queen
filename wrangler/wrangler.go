@@ -5,16 +5,17 @@ import (
         "fmt"
         "net"
         "sync"
+        "time"
         "errors"
         "strconv"
         "crypto/tls"
         "encoding/json"
         "github.com/hlhv/fsock"
+        "github.com/hlhv/scribe"
         "github.com/google/uuid"
         "github.com/hlhv/protocol"
         "github.com/hlhv/hlhv/conf"
         "github.com/hlhv/hlhv/cells"
-        "github.com/hlhv/hlhv/scribe"
 )
 
 var (
@@ -59,6 +60,8 @@ func Fire () {
                 return
         }
         defer server.Close()
+
+        go Garden()
 
         for {
                 conn, err := server.Accept()
@@ -203,6 +206,22 @@ func handleConnBand (
                 Uuid: uuid,
         })
         return err
+}
+
+/* Garden is a goroutine that prunes cells on an interval.
+ */
+func Garden () {
+        for {
+                time.Sleep(2 * time.Minute)
+                pruned := 0
+                scribe.PrintProgress("pruning cell bands")
+                for _, cell := range cellStore.lookup {
+                        pruned += cell.Prune()
+                }
+                scribe.PrintDone(pruned, "bands pruned")
+        }
+        scribe.PrintFatal (
+                "gardener has stopped, will not attempt to run without it!")
 }
 
 /* This function is called by cells when their leashes close. It removes the
