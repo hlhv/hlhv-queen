@@ -62,7 +62,6 @@ func Load () (err error) {
                 portHttps: 443,
         }
 
-        // TODO: read file :P
         file, err := os.OpenFile(confpath, os.O_RDONLY, 0755)
         if err != nil { return err }
         reader := bufio.NewReader(file)

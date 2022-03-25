@@ -1,7 +1,6 @@
 package wrangler
 
 import (
-        // "bufio"
         "fmt"
         "net"
         "sync"
