@@ -211,7 +211,7 @@ func handleConnBand (
  */
 func Garden () {
         for {
-                time.Sleep(2 * time.Minute)
+                time.Sleep(time.Duration(conf.GetGardenFreq()) * time.Second)
                 pruned := 0
                 scribe.PrintProgress("pruning cell bands")
                 for _, cell := range cellStore.lookup {

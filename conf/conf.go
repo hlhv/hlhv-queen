@@ -15,10 +15,18 @@ type databaseType struct {
         keyPath   string
         certPath  string
         connKey   string
-        timeout   int
 
         portHlhv  int
         portHttps int
+        
+        gardenFreq int
+        maxBandAge int
+
+        timeout           int
+        timeoutReadHeader int
+        timeoutRead       int
+        timeoutWrite      int
+        timeoutIdle       int
 }
 
 var items struct {
@@ -56,10 +64,18 @@ func Load () (err error) {
         items.database = databaseType {
                 keyPath:   "/var/hlhv/cert/key.pem",
                 certPath:  "/var/hlhv/cert/cert.pem",
-                timeout:   5000,
                 
                 portHlhv:  2001,
                 portHttps: 443,
+
+                gardenFreq: 120,
+                maxBandAge: 60,
+                
+                timeout:           1,
+                timeoutReadHeader: 5,
+                timeoutRead:       10,
+                timeoutWrite:      15,
+                timeoutIdle:       120,
         }
 
         file, err := os.OpenFile(confpath, os.O_RDONLY, 0755)
@@ -154,12 +170,27 @@ func handleKeyVal (key string, val string) {
 
                 }; break
                 
-                case "keyPath":   items.database.keyPath   = val;  break
-                case "certPath":  items.database.certPath  = val;  break
-                case "connKey":   items.database.connKey   = val;  break
-                case "timeout":   items.database.timeout   = valn; break
-                case "portHlhv":  items.database.portHlhv  = valn; break
-                case "portHttps": items.database.portHttps = valn; break
+                case "keyPath":    items.database.keyPath    = val;  break
+                case "certPath":   items.database.certPath   = val;  break
+                case "connKey":    items.database.connKey    = val;  break
+                case "portHlhv":   items.database.portHlhv   = valn; break
+                case "portHttps":  items.database.portHttps  = valn; break
+                case "gardenFreq": items.database.gardenFreq = valn; break
+                case "maxBandAge": items.database.maxBandAge = valn; break
+                case "timeout":    items.database.timeout    = valn; break
+                
+                case "timeoutReadHeader":
+                        items.database.timeoutReadHeader = valn
+                        break
+                case "timeoutRead":
+                        items.database.timeoutRead = valn
+                        break
+                case "timeoutWrite":
+                        items.database.timeoutWrite = valn
+                        break
+                case "timeoutIdle":
+                        items.database.timeoutIdle = valn
+                        break
         }
 }
 

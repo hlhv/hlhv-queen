@@ -17,6 +17,10 @@ var (
 
 func Arm () (err error) {
         port = strconv.Itoa(conf.GetPortHttps())
+        timeoutReadHeader := time.Duration(conf.GetTimeoutReadHeader())
+        timeoutRead       := time.Duration(conf.GetTimeoutRead())
+        timeoutWrite      := time.Duration(conf.GetTimeoutWrite())
+        timeoutIdle       := time.Duration(conf.GetTimeoutIdle())
         scribe.PrintProgress("arming https server on port", port)
         mux = NewHolaMux()
 
@@ -41,10 +45,10 @@ func Arm () (err error) {
         
         server = &http.Server {
                 Addr:              ":" + port,
-                ReadHeaderTimeout: 5 * time.Second,
-                ReadTimeout:       10 * time.Second,
-                WriteTimeout:      15 * time.Second,
-                IdleTimeout:       120 * time.Second,
+                ReadHeaderTimeout: timeoutReadHeader * time.Second,
+                ReadTimeout:       timeoutRead       * time.Second,
+                WriteTimeout:      timeoutWrite      * time.Second,
+                IdleTimeout:       timeoutIdle       * time.Second,
                 TLSConfig:         serverConf,
                 Handler:           mux,
         }
@@ -54,7 +58,6 @@ func Arm () (err error) {
 func Fire () {
         keyPath  := conf.GetKeyPath()
         certPath := conf.GetCertPath()
-        
         exitMsg  := server.ListenAndServeTLS(certPath, keyPath)
         scribe.PrintFatal(exitMsg.Error())
 }

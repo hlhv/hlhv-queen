@@ -12,8 +12,9 @@ import (
         "encoding/json"
         "container/list"
         "github.com/hlhv/fsock"
-        "github.com/hlhv/protocol"
         "github.com/hlhv/scribe"
+        "github.com/hlhv/protocol"
+        "github.com/hlhv/hlhv/conf"
         "github.com/hlhv/hlhv/srvhttps"
 )
 
@@ -401,9 +402,11 @@ func (cell *Cell) Provide () (band *Band, err error) {
 func (cell *Cell) Prune () (pruned int) {
         cell.bandsMutex.Lock()
         defer cell.bandsMutex.Unlock()
+        
+        maxBandAge := time.Duration(conf.GetMaxBandAge()) * time.Second
 
         now := time.Now()
-        threshold := now.Add(-1 * time.Minute)
+        threshold := now.Add(-1 * maxBandAge)
         
         item := cell.bands.Front()
         for item != nil {
