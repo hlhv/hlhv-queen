@@ -1,3 +1,5 @@
+github.com/akamensky/argparse v1.3.1 h1:kP6+OyvR0fuBH6UhbE6yh/nskrDEIQgEA1SUXDPjx4g=
+github.com/akamensky/argparse v1.3.1/go.mod h1:S5kwC7IuDcEr5VeXtGPRVZ5o/FdhcMlQz4IZQuw64xA=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/hlhv/fsock v0.0.0-20220320041146-0ea1c4c1068b/go.mod h1:JZLxqhthbuj6yK9VpKT3Qx3hmhs8ofcEew/yP8E6OoQ=
@@ -7,3 +9,7 @@ github.com/hlhv/protocol v0.0.0-20220328065449-411ccba71693 h1:8pqkFVGni1yutIu2N
 github.com/hlhv/protocol v0.0.0-20220328065449-411ccba71693/go.mod h1:coT2nFBDjAgv3vw5DsLy1lFen2e+CQUsacURJJjdnr0=
 github.com/hlhv/scribe v0.0.0-20220324182224-80ef1f1c4574 h1:f9vhn1ZnFBmlNlH8H/XaPIF0vWWASjdLu+zbUHqITo8=
 github.com/hlhv/scribe v0.0.0-20220324182224-80ef1f1c4574/go.mod h1:no+rCxthQ9inCEMt+rkUSCgpxDtvC62yzEzP9D+o/o4=
+github.com/hlhv/scribe v0.0.0-20220328203027-c198c23e9b0e h1:B4bnAj5op8z9T+uA1z6v7B2VJTeyJ8lE0OITOeP/lNc=
+github.com/hlhv/scribe v0.0.0-20220328203027-c198c23e9b0e/go.mod h1:no+rCxthQ9inCEMt+rkUSCgpxDtvC62yzEzP9D+o/o4=
+github.com/hlhv/scribe v0.0.0-20220329213200-0b4286c92f42 h1:OsrtHchIZbB1gdMlOnmXepccRaHkwkU4yQllTNeu0Dc=
+github.com/hlhv/scribe v0.0.0-20220329213200-0b4286c92f42/go.mod h1:no+rCxthQ9inCEMt+rkUSCgpxDtvC62yzEzP9D+o/o4=

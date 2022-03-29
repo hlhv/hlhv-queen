@@ -198,7 +198,9 @@ func (mux *HolaMux) Handler (r *http.Request) (h http.Handler, pattern string) {
 
         // resolve hostname aliases if there are any
         host = conf.ResolveAliases(host)
-        scribe.PrintResolve("resolved to \"" + host + path + "\"")
+        scribe.PrintResolve (
+                scribe.LogLevelDebug,
+                "resolved to \"" + host + path + "\"")
 
         // If the given path is /tree and its handler is not registered,
         // redirect for /tree/.
@@ -239,7 +241,7 @@ func (mux *HolaMux) handlerInternal (
         h, pattern = mux.match(host + path)
         
         if h == nil {
-                scribe.PrintError("404", pattern)
+                scribe.PrintError(scribe.LogLevelError,"404", pattern)
                 h, pattern = NotFoundHandler(), ""
         }
         
@@ -251,6 +253,7 @@ func (mux *HolaMux) handlerInternal (
  */
 func (mux *HolaMux) ServeHTTP (w http.ResponseWriter, r *http.Request) {
         scribe.PrintRequest (
+                scribe.LogLevelNormal,
                 "request for \"" + r.Host + r.URL.Path + "\" by", r.RemoteAddr)
         
         if r.RequestURI == "*" {
@@ -304,7 +307,7 @@ func (mux *HolaMux) Mount (pattern string, handler http.Handler) error {
                 mux.sortedEntries = appendSorted(mux.sortedEntries, entry)
         }
 
-        scribe.PrintMount("mount on", pattern)
+        scribe.PrintMount(scribe.LogLevelNormal, "mount on", pattern)
         return nil
 }
 
@@ -344,7 +347,7 @@ func (mux *HolaMux) Unmount (pattern string) error {
         }
         mux.sortedEntries = mux.sortedEntries[:newLen]
         
-        scribe.PrintUnmount("unmount from", pattern)
+        scribe.PrintUnmount(scribe.LogLevelNormal, "unmount from", pattern)
         return nil
 }
 

@@ -18,7 +18,7 @@ type databaseType struct {
 
         portHlhv  int
         portHttps int
-        
+
         gardenFreq int
         maxBandAge int
 
@@ -45,7 +45,7 @@ var (
 )
 
 func Load () (err error) {
-        scribe.PrintProgress( "reading config file")
+        scribe.PrintProgress(scribe.LogLevelNormal, "reading config file")
 
         items.mutex.RLock()
         aliases.mutex.RLock()
@@ -139,11 +139,13 @@ func Load () (err error) {
 
         if aliases.fallback != "" {
                 scribe.PrintInfo (
+                        scribe.LogLevelDebug,
                         "using alias (fallback) -> " + aliases.fallback)
         }
 
         for key, val = range aliases.database {
                 scribe.PrintInfo (
+                        scribe.LogLevelDebug,
                         "using alias " + key + " -> " + val)
         }
 

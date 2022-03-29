@@ -66,19 +66,23 @@ func (cell *Cell) Listen () {
                 kind, data, err := protocol.ReadParseFrame(cell.Reader)
                 if err == io.EOF { break }
                 if err != nil {
-                        scribe.PrintError("error parsing frame:", err)
+                        scribe.PrintError (
+                                scribe.LogLevelError,
+                                "error parsing frame:", err)
                         continue
                 }
                 err = cell.handleOneFrame(kind, data)
                 if err == io.EOF { break }
                 if err != nil {
-                        scribe.PrintError("error handling frame:", err)
+                        scribe.PrintError (
+                                scribe.LogLevelError,
+                                "error handling frame:", err)
                         continue
                 }
         }
 
         // the leash has closed, so clean up the cell
-        scribe.PrintDisconnect("cell disconnected")
+        scribe.PrintDisconnect(scribe.LogLevelNormal, "cell disconnected")
         cell.cleanUp()
 }
 
@@ -168,7 +172,7 @@ func (cell *Cell) HandleHTTP (
         res http.ResponseWriter,
         req *http.Request,
 ) {
-        scribe.PrintInfo("handling http request")
+        scribe.PrintInfo(scribe.LogLevelDebug, "handling http request")
 
         nPort, _ := strconv.Atoi(req.URL.Port())
         frameHead := &protocol.FrameHTTPReqHead {
@@ -196,12 +200,12 @@ func (cell *Cell) HandleHTTP (
 
         // get a band, and use it to send the request to the cell. if it didn't
         // work, mark the band as closed and get a new one.
-        scribe.PrintProgress("sending header to cell")
+        scribe.PrintProgress(scribe.LogLevelDebug, "sending header to cell")
         for {
                 band, err = cell.Provide()
                 if err != nil {
                         err = errors.New(fmt.Sprint("server overload:", err))
-                        scribe.PrintError(err)
+                        scribe.PrintError(scribe.LogLevelError, err)
                         srvhttps.WriteServUnavail(res, req, err)
                         return
                 }
@@ -209,12 +213,14 @@ func (cell *Cell) HandleHTTP (
                 _, err = band.WriteMarshalFrame(frameHead)
                 if err == nil { break }
                 band.Close()
-                scribe.PrintInfo("detected closed band, asking for new one")
+                scribe.PrintInfo (
+                        scribe.LogLevelDebug,
+                        "detected closed band, asking for new one")
                 
         }
 
         // write body to cell
-        scribe.PrintProgress("sending body to cell")
+        scribe.PrintProgress(scribe.LogLevelDebug, "sending body to cell")
         for {
                 data := make([]byte, 1024)
                 _, err := req.Body.Read(data)
@@ -231,29 +237,29 @@ func (cell *Cell) HandleHTTP (
                         band.Close()
                         err = errors.New (fmt.Sprint (
                                 "band closed abruptly:", err))
-                        scribe.PrintError(err)
+                        scribe.PrintError(scribe.LogLevelError, err)
                         srvhttps.WriteBadGateway(res, req, err)
                         return
                 }
         }
 
         // write end to cell
-        scribe.PrintProgress("sending end to cell")
+        scribe.PrintProgress(scribe.LogLevelDebug, "sending end to cell")
         _, err = band.WriteMarshalFrame(&protocol.FrameHTTPReqEnd {})
         if err != nil {
                 band.Close()
                 err = errors.New(fmt.Sprint("band closed abruptly: ", err))
-                scribe.PrintError(err)
+                scribe.PrintError(scribe.LogLevelError, err)
                 srvhttps.WriteBadGateway(res, req, err)
                 return
         }
 
         // read head from cell
-        scribe.PrintProgress("reading head from cell")
+        scribe.PrintProgress(scribe.LogLevelDebug, "reading head from cell")
         kind, data, err := band.ReadParseFrame()
         if err != nil {
                 band.Close()
-                scribe.PrintError(err)
+                scribe.PrintError(scribe.LogLevelError, err)
                 srvhttps.WriteBadGateway(res, req, err)
                 return
         }
@@ -263,7 +269,7 @@ func (cell *Cell) HandleHTTP (
                 err = errors.New (fmt.Sprint (        
                         "band sent unknown code ", kind, ", expecting response",
                         "head"))
-                scribe.PrintError(err)
+                scribe.PrintError(scribe.LogLevelError, err)
                 srvhttps.WriteBadGateway(res, req, err)
                 return
         }
@@ -275,13 +281,13 @@ func (cell *Cell) HandleHTTP (
         if resHead.StatusCode < 200 {
                 err = errors.New (fmt.Sprint (        
                         "band sent bad status code ", resHead.StatusCode))
-                scribe.PrintError(err)
+                scribe.PrintError(scribe.LogLevelError, err)
                 srvhttps.WriteBadGateway(res, req, err)
                 return
         }
 
         // write headers
-        scribe.PrintProgress("sending head")
+        scribe.PrintProgress(scribe.LogLevelDebug, "sending head")
         for key, values := range(resHead.Headers) {
                 // each key may have multiple values
                 for _, value := range(values) {
@@ -292,20 +298,22 @@ func (cell *Cell) HandleHTTP (
         res.WriteHeader(resHead.StatusCode)
 
         // pipe body from cell to client
-        scribe.PrintProgress("piping body from cell")
+        scribe.PrintProgress(scribe.LogLevelDebug, "piping body from cell")
         for {
                 kind, data, err := band.ReadParseFrame()
                 if err != nil {
                         band.Close()
                         err = errors.New (fmt.Sprint (
                                 "band closed abruptly: ", err))
-                        scribe.PrintError(err)
+                        scribe.PrintError(scribe.LogLevelError, err)
                         srvhttps.WriteBadGateway(res, req, err)
                         return
                 }
 
                 if kind == protocol.FrameKindHTTPResEnd {
-                        scribe.PrintDone("http request done")
+                        scribe.PrintDone (
+                                scribe.LogLevelDebug,
+                                "http request done")
                         return
                 }
 
@@ -314,7 +322,7 @@ func (cell *Cell) HandleHTTP (
                         err = errors.New (fmt.Sprint (        
                                 "band sent unknown code ", kind, ", expecting",
                                 "response body"))
-                        scribe.PrintError(err)
+                        scribe.PrintError(scribe.LogLevelError, err)
                         srvhttps.WriteBadGateway(res, req, err)
                         return
                 }
@@ -323,7 +331,7 @@ func (cell *Cell) HandleHTTP (
                 if err != nil {
                         err = errors.New (fmt.Sprint (        
                                 "http request mysteriously died: ", err))
-                        scribe.PrintError(err)
+                        scribe.PrintError(scribe.LogLevelError, err)
                         return
                 }
         }
@@ -346,11 +354,15 @@ func (cell *Cell) Bind (band *Band) {
 
         select {
         case request := <- cell.waitList:
-                scribe.PrintInfo("found band request, fulfilling")
+                scribe.PrintInfo (
+                        scribe.LogLevelDebug,
+                        "found band request, fulfilling")
                 request <- band
                 break
         default:
-                scribe.PrintInfo("no band requests to fulfill")
+                scribe.PrintInfo (
+                        scribe.LogLevelDebug,
+                        "no band requests to fulfill")
                 break
         }
         
@@ -377,16 +389,16 @@ func (cell *Cell) Provide () (band *Band, err error) {
 
         // else, put in a request for a new one and wait
         // request the next band be sent to us
-        scribe.PrintInfo("new band needed")
+        scribe.PrintInfo(scribe.LogLevelDebug, "new band needed")
         request := make(chan *Band)
         cell.waitList <- request
-        scribe.PrintInfo("request made")
+        scribe.PrintInfo(scribe.LogLevelDebug, "request made")
         // send a request to the cell for a new band
         cell.SendSig(SigNeedBand)
         // wait for request to be fulfilled
-        scribe.PrintProgress("waiting for fulfill")
+        scribe.PrintProgress(scribe.LogLevelDebug, "waiting for fulfill")
         band = <- request
-        scribe.PrintDone("band request fulfilled")
+        scribe.PrintDone(scribe.LogLevelDebug, "band request fulfilled")
 
         if band == nil {
                 return nil, errors.New (
@@ -433,7 +445,7 @@ func (cell *Cell) Prune () (pruned int) {
  * shuts down all bands.
  */
 func (cell *Cell) cleanUp () {
-        scribe.PrintProgress("cleaning up cell")
+        scribe.PrintProgress(scribe.LogLevelDebug, "cleaning up cell")
         cell.onClean(cell)
 
         // stop listening for signals
@@ -454,5 +466,5 @@ func (cell *Cell) cleanUp () {
                 item = item.Next()
         }
         cell.bandsMutex.Unlock()
-        scribe.PrintDone("cleaned up cell")
+        scribe.PrintDone(scribe.LogLevelDebug, "cleaned up cell")
 }

@@ -30,7 +30,9 @@ var cellStore struct {
 
 func Arm () (err error) {
         port = strconv.Itoa(conf.GetPortHlhv())
-        scribe.PrintProgress("arming cell wrangler on port " + port)
+        scribe.PrintProgress (
+                scribe.LogLevelNormal,
+                "arming cell wrangler on port", port)
 
         keyPath  := conf.GetKeyPath()
         certPath := conf.GetCertPath()
@@ -55,7 +57,7 @@ func Arm () (err error) {
 func Fire () {
         server, err := tls.Listen("tcp", ":" + port, &config)
         if err != nil {
-                scribe.PrintFatal(err.Error())
+                scribe.PrintFatal(scribe.LogLevelError , err.Error())
                 return
         }
         defer server.Close()
@@ -64,16 +66,20 @@ func Fire () {
 
         for {
                 conn, err := server.Accept()
-                scribe.PrintConnect("new connection")
+                scribe.PrintConnect(scribe.LogLevelNormal, "new connection")
                 if err != nil {
-                        scribe.PrintError("wrangler accept:", err)
+                        scribe.PrintError (
+                                scribe.LogLevelError,
+                                "wrangler accept:", err)
                         continue
                 }
 
                 err = handleConn(conn)
                 
                 if err != nil {
-                        scribe.PrintError("wrangler accept:", err)
+                        scribe.PrintError (
+                                scribe.LogLevelError,
+                                "wrangler accept:", err)
                         continue
                 }
         }
@@ -86,18 +92,20 @@ func handleConn (conn net.Conn) (err error) {
         reader := fsock.NewReader(conn)
         writer := fsock.NewWriter(conn)
 
-        scribe.PrintProgress("waiting for logon")
+        scribe.PrintProgress (
+                scribe.LogLevelDebug,
+                "waiting for logon")
         kind, data, err := protocol.ReadParseFrame(reader)
         if err != nil {
                 conn.Close()
-                scribe.PrintDisconnect("kicked")
+                scribe.PrintDisconnect(scribe.LogLevelNormal, "kicked")
                 return errors.New (fmt.Sprint (
                         "error parsing login frame: ", err.Error()))
         }
 
         if kind != protocol.FrameKindIAm {
                 conn.Close()
-                scribe.PrintDisconnect("kicked")
+                scribe.PrintDisconnect(scribe.LogLevelNormal, "kicked")
                 return errors.New (fmt.Sprint (
                         "cell sent strange kind code: ", kind))
         }
@@ -106,7 +114,7 @@ func handleConn (conn net.Conn) (err error) {
         err = json.Unmarshal(data, &frame)
         if err != nil {
                 conn.Close()
-                scribe.PrintDisconnect("kicked")
+                scribe.PrintDisconnect(scribe.LogLevelNormal, "kicked")
                 return errors.New (fmt.Sprint (
                         "error unmarshaling login frame: ", err.Error()))
         }
@@ -116,19 +124,19 @@ func handleConn (conn net.Conn) (err error) {
                 err = handleConnCell(conn, reader, writer)
                 if err != nil {
                         conn.Close()
-                        scribe.PrintDisconnect("kicked")
+                        scribe.PrintDisconnect(scribe.LogLevelNormal, "kicked")
                         return err
                 }
-                scribe.PrintDone("accepted cell")
+                scribe.PrintDone(scribe.LogLevelNormal, "accepted cell")
                 break
         case protocol.ConnKindBand:
                 err = handleConnBand(conn, reader, writer, frame.Uuid)
                 if err != nil {
                         conn.Close()
-                        scribe.PrintDisconnect("kicked")
+                        scribe.PrintDisconnect(scribe.LogLevelNormal, "kicked")
                         return err
                 }
-                scribe.PrintDone("accepted band")
+                scribe.PrintDone(scribe.LogLevelNormal, "accepted band")
                 break
         }
 
@@ -138,7 +146,7 @@ func handleConn (conn net.Conn) (err error) {
 /* handleConnCell creates a new Cell fom a connection and adds it to the
  * wrangler's list of Cells. If something goes wrong, this function will return
  * an error. This function does not close the channel in response to an error,
- * this is teh responsibility of handleConn(). This function assumes that the
+ * this is the responsibility of handleConn(). This function assumes that the
  * connection wishes to become a Cell.
  */
 func handleConnCell (
@@ -213,13 +221,14 @@ func Garden () {
         for {
                 time.Sleep(time.Duration(conf.GetGardenFreq()) * time.Second)
                 pruned := 0
-                scribe.PrintProgress("pruning cell bands")
+                scribe.PrintProgress(scribe.LogLevelDebug, "pruning cell bands")
                 for _, cell := range cellStore.lookup {
                         pruned += cell.Prune()
                 }
-                scribe.PrintDone(pruned, "bands pruned")
+                scribe.PrintDone(scribe.LogLevelDebug, pruned, "bands pruned")
         }
         scribe.PrintFatal (
+                scribe.LogLevelError,
                 "gardener has stopped, will not attempt to run without it!")
 }
 

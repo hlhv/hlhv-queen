@@ -27,7 +27,10 @@ func WriteSysmsg (
                 "<p>" + content + "</p>" +
                 "</body></html>",
         ))
-        if err != nil { scribe.PrintError("cannot write sysmsg:", err) }
+        if err != nil {
+                scribe.PrintError (
+                        scribe.LogLevelError, "cannot write sysmsg:", err)
+        }
 }
 
 func NotFoundHandler () http.Handler {

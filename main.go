@@ -16,34 +16,44 @@ func start () {
         var err error
 
         printBanner()
-        scribe.PrintProgress("starting hlhv queen cell")
+        scribe.PrintProgress(scribe.LogLevelNormal, "starting hlhv queen cell")
 
         err = conf.Load()
         if err != nil {
-                scribe.PrintWarning("could not load conf: " + err.Error())
-                scribe.PrintWarning("using default configuration")
+                scribe.PrintWarning (
+                        scribe.LogLevelError,
+                        "could not load conf: " + err.Error())
+                scribe.PrintWarning (
+                        scribe.LogLevelError,
+                        "using default configuration")
         }
 
         err = wrangler.Arm()
         if err != nil {
-                scribe.PrintFatal("could not arm wrangler: " + err.Error())
+                scribe.PrintFatal (
+                        scribe.LogLevelError,
+                        "could not arm wrangler: " + err.Error())
                 return
         }
         err = srvhttps.Arm()
         if err != nil {
-                scribe.PrintFatal("could not arm srvhttps: " + err.Error())
+                scribe.PrintFatal (
+                        scribe.LogLevelError,
+                        "could not arm srvhttps: " + err.Error())
                 return
         }
 
-        scribe.PrintProgress("firing")
+        scribe.PrintProgress(scribe.LogLevelNormal, "firing")
         go wrangler.Fire()
         go srvhttps.Fire()
 
-        scribe.PrintDone("startup sequence complete, resuming normal operation")
+        scribe.PrintDone (
+                scribe.LogLevelNormal,
+                "startup sequence complete, resuming normal operation")
 }
 
 func loop () {
         for {
-                scribe.ListenOnce()
+                scribe.ListenOnce(scribe.LogLevelNormal)
         }
 }

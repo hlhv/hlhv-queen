@@ -26,7 +26,9 @@ func (cell *Cell) handleSig (sig Sig) (run bool) {
         case SigCleaning:
                 return false
         case SigNeedBand:
-                scribe.PrintProgress("requesting new band")
+                scribe.PrintProgress (
+                        scribe.LogLevelDebug,
+                        "requesting new band")
                 protocol.WriteMarshalFrame (writer, &protocol.FrameNeedBand {
                         Count: 1,
                 })

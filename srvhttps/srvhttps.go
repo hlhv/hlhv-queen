@@ -21,7 +21,9 @@ func Arm () (err error) {
         timeoutRead       := time.Duration(conf.GetTimeoutRead())
         timeoutWrite      := time.Duration(conf.GetTimeoutWrite())
         timeoutIdle       := time.Duration(conf.GetTimeoutIdle())
-        scribe.PrintProgress("arming https server on port", port)
+        scribe.PrintProgress (
+                scribe.LogLevelNormal,
+                "arming https server on port", port)
         mux = NewHolaMux()
 
         // following:
@@ -59,7 +61,7 @@ func Fire () {
         keyPath  := conf.GetKeyPath()
         certPath := conf.GetCertPath()
         exitMsg  := server.ListenAndServeTLS(certPath, keyPath)
-        scribe.PrintFatal(exitMsg.Error())
+        scribe.PrintFatal(scribe.LogLevelError, exitMsg.Error())
 }
 
 func MountFunc (
