@@ -40,11 +40,7 @@ var aliases struct {
         mutex    sync.RWMutex
 }
 
-var (
-        confpath string = "/etc/hlhv/hlhv.conf"
-)
-
-func Load () (err error) {
+func Load (confpath string) (err error) {
         scribe.PrintProgress(scribe.LogLevelNormal, "reading config file")
 
         items.mutex.RLock()

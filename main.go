@@ -8,6 +8,8 @@ import (
 )
 
 func main () {
+        ParseArgs()
+
         go start()
         loop()
 }
@@ -15,10 +17,10 @@ func main () {
 func start () {
         var err error
 
-        printBanner()
+        if options.logLevel <= scribe.LogLevelNormal { printBanner() }
         scribe.PrintProgress(scribe.LogLevelNormal, "starting hlhv queen cell")
 
-        err = conf.Load()
+        err = conf.Load(options.confPath)
         if err != nil {
                 scribe.PrintWarning (
                         scribe.LogLevelError,
@@ -54,6 +56,6 @@ func start () {
 
 func loop () {
         for {
-                scribe.ListenOnce(scribe.LogLevelNormal)
+                scribe.ListenOnce(options.logLevel)
         }
 }
