@@ -20,13 +20,13 @@ it will be directed to the cell mounted on `@/photos/dinosaurs`. The cell would
 receive the entire request path, and send the correct file to the queen, where
 it would be sent back to the end user.
 
-# Usage
+## Usage
 
 Running the program will automatically load with the default
 
 Run `hlhv --help` for detailed usage information.
 
-# Using Certificates
+## Using Certificates
 
 HLHV is HTTPS only, so a tls key and certificate are required. Their paths can
 be specified in the configuration file, and are by default looked for at
@@ -44,7 +44,7 @@ can be found here:
 The HLHV configuration tool ![wrench](https://github.com/hlhv/wrench) will
 eventually be able to perform this task automatically.
 
-# Configuration
+## Configuration
 
 By default, the configuration file for the queen cell is located at
 `/etc/hlhv/hlhv.conf`. A custom file can be specified by running the program
@@ -63,9 +63,9 @@ Each line of the file is either a comment, or a whitespace-separated key/value
 pair. If multiple lines exist that all set the same key, the last one will be
 used. Some keys, however, behave as commands, and do not exhibit this behavior.
 
-## Commands
+### Commands
 
-### `alias <pattern> -> <value>`
+#### `alias <pattern> -> <value>`
 Automatically replace domain names in the incoming request that match
 the pattern with the specified value. This is mostly useful for aliasing
 multiple domains to `@`, which is what cells should normally mount
@@ -74,18 +74,18 @@ under. By default, `localhost`, `127.0.0.1`, `::ffff:127.0.0.1`, and
 it is possible to alias all requests which did not match a preexisting
 alias to the specified value. However, use of this should be avoided.
 
-### `unalias <pattern>`
+#### `unalias <pattern>`
 Remove an alias. This works on the default aliases as well.
 
-## Keys
+### Keys
 
-### `keyPath`
+#### `keyPath`
 Specify the TLS key path. Default: `/var/hlhv/cert/key.pem`
 
-### `certPath`
+#### `certPath`
 Specify the TLS certificate path. Default: `/var/hlhv/cert/cert.pem`
 
-### `connKey`
+#### `connKey`
 A bcrypt hash string specifying the passkey that cells will need to send
 to the server in order to connect. This has a default value of empty
 and not setting it will cause the server to tell you on startup why
@@ -94,38 +94,38 @@ exactly doing so is a bad idea.
 You can generate a hash to use here with
 ![this tool](https://github.com/hlhv/wrench).
 
-### `portHlhv`
+#### `portHlhv`
 An integer specifying the port that the server will listen for new
 connections on. Default: `2001`
 
-### `portHttps`
+#### `portHttps`
 An integer specifying the port that the server will listen for new
 HTTPS requests on. Default: `443`
 
-### `gardenFreq`
+#### `gardenFreq`
 The interval, in seconds, at which excess bands will be closed, freeing
 up resources. Default: `120`
 
-### `maxBandAge`
+#### `maxBandAge`
 The maximum time, in seconds, an band can be inactive before it is
 closed. Default: `60`
 
-### `timeout`
+#### `timeout`
 The amount of time, in seconds, a cell has to respond to the server.
 This is currently only used during the login process. Default: `1`
 
-### `timeoutReadHeader`
+#### `timeoutReadHeader`
 The amount of time, in seconds, an HTTPS client has to send request
 headers. Default: `5`
 
-### `timeoutRead`
+#### `timeoutRead`
 The amount of time, in seconds, an HTTPS client has to send the entire
 request. Default: `10`
 
-### `timeoutWrite`
+#### `timeoutWrite`
 The amount of time, in seconds, the server has to send a response back
 to the client. Default: `15`
 
-### `timeoutIdle`
+#### `timeoutIdle`
 The amount of time, in seconds, to wait for the next request when
 keep-alives are enabled. Default: `120`
