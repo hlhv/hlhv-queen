@@ -156,7 +156,26 @@ func handleConnCell (
 ) (
         err error,
 ) {
-        cell := cells.NewCell(leash, reader, writer, cleanUpCell)
+        // read login key
+        kind, data, err := protocol.ReadParseFrame(reader)
+        if kind != protocol.FrameKindKey {
+                return errors.New (fmt.Sprint (
+                        "cell sent strange kind code: ", kind))
+        }
+
+        frameKey := protocol.FrameKey {}
+        err = json.Unmarshal(data, &frameKey)
+        if err != nil {
+                return errors.New (fmt.Sprint (
+                        "error unmarshaling key frame: ", err.Error()))
+        }
+
+        if conf.CheckConnKey(frameKey.Key) != nil {
+                return errors.New (fmt.Sprint (
+                        "cell sent strange key: ", frameKey.Key))
+        }
+
+        var cell *cells.Cell
 
         // generate a uuid and slap that hoe into the cell store
         var uuidString string
@@ -167,6 +186,9 @@ func handleConnCell (
                 // if by some wierd chance the uuid exists, make a new one
                 _, exists := cellStore.lookup[uuidString]
                 if !exists {
+                        cell = cells.NewCell (
+                                leash, reader, writer,
+                                uuidString, cleanUpCell)
                         cellStore.lookup[uuidString] = cell
                         break
                 }
@@ -197,6 +219,20 @@ func handleConnBand (
 ) (
         err error,
 ) {
+        // read session key
+        kind, data, err := protocol.ReadParseFrame(reader)
+        if kind != protocol.FrameKindKey {
+                return errors.New (fmt.Sprint (
+                        "band sent strange kind code: ", kind))
+        }
+
+        frameKey := protocol.FrameKey {}
+        err = json.Unmarshal(data, &frameKey)
+        if err != nil {
+                return errors.New (fmt.Sprint (
+                        "error unmarshaling key frame: ", err.Error()))
+        }
+
         cell, exists := cellStore.lookup[uuid]
         if !exists {
                 return errors.New (fmt.Sprint (
@@ -206,7 +242,8 @@ func handleConnBand (
         band := cells.NewBand(conn, reader, writer)
 
         // add band to cell
-        cell.Bind(band)
+        err = cell.Bind(band, frameKey.Key)
+        if err != nil { return err }
 
         // inform the band that it has been accepted
         _, err = protocol.WriteMarshalFrame (writer, &protocol.FrameAccept {

@@ -1,5 +1,7 @@
 package conf
 
+import "golang.org/x/crypto/bcrypt"
+
 func GetKeyPath () string {
         return items.database.keyPath
 }
@@ -8,8 +10,10 @@ func GetCertPath () string {
         return items.database.certPath
 }
 
-func GetConnKey () string {
-        return items.database.connKey
+func CheckConnKey (against string) (err error) {
+        return bcrypt.CompareHashAndPassword (
+                []byte(items.database.connKey),
+                []byte(against))
 }
 
 func GetPortHlhv () int {

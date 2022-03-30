@@ -13,6 +13,7 @@ import (
         "container/list"
         "github.com/hlhv/fsock"
         "github.com/hlhv/scribe"
+        "github.com/google/uuid"
         "github.com/hlhv/protocol"
         "github.com/hlhv/hlhv/conf"
         "github.com/hlhv/hlhv/srvhttps"
@@ -34,18 +35,23 @@ type Cell struct {
 
         sigQueue chan Sig
         
+        key     string
         uuid    string
         onClean func (*Cell)
 }
 
 func NewCell (
-        leash   net.Conn,
-        reader  *fsock.Reader,
-        writer  *fsock.Writer,
-        onClean func (*Cell),
+        leash      net.Conn,
+        reader     *fsock.Reader,
+        writer     *fsock.Writer,
+        uuidString string,
+        onClean    func (*Cell),
 ) (
         cell *Cell,
 ) {
+        key := uuid.New()
+        keyString := key.String()
+
         return &Cell {
                 leash:    leash,
                 Reader:   reader,
@@ -54,6 +60,8 @@ func NewCell (
                 waitList: make(chan chan *Band, 64),
                 mounts:   list.New(),
                 sigQueue: make(chan Sig),
+                key:      keyString,
+                uuid:     uuidString,
                 onClean:  onClean,
         }
 }
@@ -126,6 +134,12 @@ func (cell *Cell) handleOneFrame (
                         "cell sent strange kind code on leash:", kind))
         }
         return nil
+}
+
+/* Uuid returns the cell's uuid
+ */
+func (cell *Cell) Uuid () string {
+        return cell.uuid
 }
 
 /* MountFunc is, for now, a wrapper around HolaMux.MountFunc().
@@ -339,15 +353,15 @@ func (cell *Cell) HandleHTTP (
         return
 }
 
-/* Uuid returns the uuid of a cell.
- */
-func (cell *Cell) Uuid () string {
-        return cell.uuid
-}
-
 /* Bind adds a band to the cell, and fulfils a pending request for more.
  */
-func (cell *Cell) Bind (band *Band) {
+func (cell *Cell) Bind (band *Band, key string) (err error) {
+        if key != cell.key {
+                return errors.New (fmt.Sprint (
+                        "band sent strange key: ", key,
+                ))
+        }
+
         cell.bandsMutex.Lock()
         cell.bands.PushBack(band)
         cell.bandsMutex.Unlock()
@@ -365,7 +379,8 @@ func (cell *Cell) Bind (band *Band) {
                         "no band requests to fulfill")
                 break
         }
-        
+
+        return nil
 }
 
 /* Provide returns an unlocked band that is not currently being used. If it
