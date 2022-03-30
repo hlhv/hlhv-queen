@@ -66,66 +66,66 @@ used. Some keys, however, behave as commands, and do not exhibit this behavior.
 ## Commands
 
 ### `alias <pattern> -> <value>`
-        Automatically replace domain names in the incoming request that match
-        the pattern with the specified value. This is mostly useful for aliasing
-        multiple domains to `@`, which is what cells should normally mount
-        under. By default, `localhost`, `127.0.0.1`, `::ffff:127.0.0.1`, and
-        `::1` are all aliased to `@`. By specifying `(fallback)` as the pattern,
-        it is possible to alias all requests which did not match a preexisting
-        alias to the specified value. However, use of this should be avoided.
+Automatically replace domain names in the incoming request that match
+the pattern with the specified value. This is mostly useful for aliasing
+multiple domains to `@`, which is what cells should normally mount
+under. By default, `localhost`, `127.0.0.1`, `::ffff:127.0.0.1`, and
+`::1` are all aliased to `@`. By specifying `(fallback)` as the pattern,
+it is possible to alias all requests which did not match a preexisting
+alias to the specified value. However, use of this should be avoided.
 
 ### `unalias <pattern>`
-        Remove an alias. This works on the default aliases as well.
+Remove an alias. This works on the default aliases as well.
 
 ## Keys
 
 ### `keyPath`
-        Specify the TLS key path. Default: `/var/hlhv/cert/key.pem`
+Specify the TLS key path. Default: `/var/hlhv/cert/key.pem`
 
 ### `certPath`
-        Specify the TLS certificate path. Default: `/var/hlhv/cert/cert.pem`
+Specify the TLS certificate path. Default: `/var/hlhv/cert/cert.pem`
 
 ### `connKey`
-        A bcrypt hash string specifying the passkey that cells will need to send
-        to the server in order to connect. This has a default value of empty
-        and not setting it will cause the server to tell you on startup why
-        exactly doing so is a bad idea.
+A bcrypt hash string specifying the passkey that cells will need to send
+to the server in order to connect. This has a default value of empty
+and not setting it will cause the server to tell you on startup why
+exactly doing so is a bad idea.
 
-        You can generate a hash to use here with
-        ![this tool](https://github.com/hlhv/wrench).
+You can generate a hash to use here with
+![this tool](https://github.com/hlhv/wrench).
 
 ### `portHlhv`
-        An integer specifying the port that the server will listen for new
-        connections on. Default: `2001`
+An integer specifying the port that the server will listen for new
+connections on. Default: `2001`
 
 ### `portHttps`
-        An integer specifying the port that the server will listen for new
-        HTTPS requests on. Default: `443`
+An integer specifying the port that the server will listen for new
+HTTPS requests on. Default: `443`
 
 ### `gardenFreq`
-        The interval, in seconds, at which excess bands will be closed, freeing
-        up resources. Default: `120`
+The interval, in seconds, at which excess bands will be closed, freeing
+up resources. Default: `120`
 
 ### `maxBandAge`
-        The maximum time, in seconds, an band can be inactive before it is
-        closed. Default: `60`
+The maximum time, in seconds, an band can be inactive before it is
+closed. Default: `60`
 
 ### `timeout`
-        The amount of time, in seconds, a cell has to respond to the server.
-        This is currently only used during the login process. Default: `1`
+The amount of time, in seconds, a cell has to respond to the server.
+This is currently only used during the login process. Default: `1`
 
 ### `timeoutReadHeader`
-        The amount of time, in seconds, an HTTPS client has to send request
-        headers. Default: `5`
+The amount of time, in seconds, an HTTPS client has to send request
+headers. Default: `5`
 
 ### `timeoutRead`
-        The amount of time, in seconds, an HTTPS client has to send the entire
-        request. Default: `10`
+The amount of time, in seconds, an HTTPS client has to send the entire
+request. Default: `10`
 
 ### `timeoutWrite`
-        The amount of time, in seconds, the server has to send a response back
-        to the client. Default: `15`
+The amount of time, in seconds, the server has to send a response back
+to the client. Default: `15`
 
 ### `timeoutIdle`
-        The amount of time, in seconds, to wait for the next request when
-        keep-alives are enabled. Default: `120`
+The amount of time, in seconds, to wait for the next request when
+keep-alives are enabled. Default: `120`
