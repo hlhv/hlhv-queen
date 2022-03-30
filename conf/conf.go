@@ -60,6 +60,7 @@ func Load (confpath string) (err error) {
         items.database = databaseType {
                 keyPath:   "/var/hlhv/cert/key.pem",
                 certPath:  "/var/hlhv/cert/cert.pem",
+                connKey:   "",
                 
                 portHlhv:  2001,
                 portHttps: 443,
@@ -143,6 +144,14 @@ func Load (confpath string) (err error) {
                 scribe.PrintInfo (
                         scribe.LogLevelDebug,
                         "using alias " + key + " -> " + val)
+        }
+
+        if items.database.connKey == "" {
+                scribe.PrintWarning (
+                        scribe.LogLevelError,
+                        "CONNECTION KEY WAS NOT SET, SYSTEM IS VULNERABLE TO " +
+                        "ATTACK!",
+                )
         }
 
         return nil
