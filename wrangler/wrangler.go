@@ -183,7 +183,6 @@ func handleConnCell (
                 uuid := uuid.New()
                 uuidString = uuid.String()
 
-                // if by some wierd chance the uuid exists, make a new one
                 _, exists := cellStore.lookup[uuidString]
                 if !exists {
                         cell = cells.NewCell (
@@ -192,11 +191,14 @@ func handleConnCell (
                         cellStore.lookup[uuidString] = cell
                         break
                 }
+                
+                // if by some wierd chance the uuid exists, make a new one
         }
 
         // inform the cell that it has been accepted, and give it the uuid
         _, err = protocol.WriteMarshalFrame (writer, &protocol.FrameAccept {
                 Uuid: uuidString,
+                Key:  cell.Key(),
         })
         if err != nil { return err }
         

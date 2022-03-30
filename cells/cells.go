@@ -136,6 +136,12 @@ func (cell *Cell) handleOneFrame (
         return nil
 }
 
+/* Key returns the cell's key
+ */
+func (cell *Cell) Key () string {
+        return cell.key
+}
+
 /* Uuid returns the cell's uuid
  */
 func (cell *Cell) Uuid () string {
