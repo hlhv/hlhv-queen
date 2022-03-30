@@ -95,6 +95,7 @@ func handleConn (conn net.Conn) (err error) {
         scribe.PrintProgress (
                 scribe.LogLevelDebug,
                 "waiting for logon")
+        bumpTimeout(conn)
         kind, data, err := protocol.ReadParseFrame(reader)
         if err != nil {
                 conn.Close()
@@ -157,6 +158,7 @@ func handleConnCell (
         err error,
 ) {
         // read login key
+        bumpTimeout(leash)
         kind, data, err := protocol.ReadParseFrame(reader)
         if kind != protocol.FrameKindKey {
                 return errors.New (fmt.Sprint (
@@ -201,7 +203,8 @@ func handleConnCell (
                 Key:  cell.Key(),
         })
         if err != nil { return err }
-        
+
+        clearTimeout(leash)
         go cell.Listen()
         go cell.ListenSig()
         return nil
@@ -222,6 +225,7 @@ func handleConnBand (
         err error,
 ) {
         // read session key
+        bumpTimeout(conn)
         kind, data, err := protocol.ReadParseFrame(reader)
         if kind != protocol.FrameKindKey {
                 return errors.New (fmt.Sprint (
@@ -251,6 +255,8 @@ func handleConnBand (
         _, err = protocol.WriteMarshalFrame (writer, &protocol.FrameAccept {
                 Uuid: uuid,
         })
+
+        clearTimeout(conn)
         return err
 }
 
@@ -276,4 +282,18 @@ func Garden () {
  */
 func cleanUpCell (cell *cells.Cell) {
         delete(cellStore.lookup, cell.Uuid())
+}
+
+/* bumpTimeout sets the read timeout of a connection to however many seconds in
+ * the future specified by conf.
+ */
+func bumpTimeout (conn net.Conn) {
+        duration := time.Duration(conf.GetTimeout()) * time.Second
+        conn.SetDeadline(time.Now().Add(duration))
+}
+
+/* clearTimeout clears the timeout for a connection.
+ */
+func clearTimeout (conn net.Conn) {
+        conn.SetDeadline(time.Time {})
 }
