@@ -11,6 +11,7 @@ func GetCertPath () string {
 }
 
 func CheckConnKey (against string) (err error) {
+        if items.database.connKey == "" { return nil }
         return bcrypt.CompareHashAndPassword (
                 []byte(items.database.connKey),
                 []byte(against))

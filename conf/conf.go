@@ -176,6 +176,10 @@ func handleKeyVal (key string, val string) {
                         }
 
                 }; break
+
+                case "unalias": {
+                        delete(aliases.database, val)
+                }; break
                 
                 case "keyPath":    items.database.keyPath    = val;  break
                 case "certPath":   items.database.certPath   = val;  break
