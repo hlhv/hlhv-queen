@@ -4,12 +4,13 @@ import (
         "os"
         "fmt"
         "github.com/hlhv/scribe"
+        // TODO: write custom implementation
         "github.com/akamensky/argparse"
 )
 
 var options struct {
-        logLevel scribe.LogLevel
-        confPath string
+        logLevel  scribe.LogLevel
+        confPath  string
 }
 
 func ParseArgs () {
@@ -46,5 +47,5 @@ func ParseArgs () {
                 case "none":   options.logLevel = scribe.LogLevelNone;   break
         }
 
-        options.confPath = *confPath
+        options.confPath  = *confPath
 }

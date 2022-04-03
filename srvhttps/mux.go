@@ -10,7 +10,7 @@ import (
         "net/url"
         "net/http"
         "github.com/hlhv/scribe"
-        "github.com/hlhv/hlhv/conf"
+        "github.com/hlhv/hlhv-queen/conf"
 )
 
 /* This code was originally taken from the http package source, and modified to

@@ -2,9 +2,9 @@ package main
 
 import (
         "github.com/hlhv/scribe"
-        "github.com/hlhv/hlhv/conf"
-        "github.com/hlhv/hlhv/srvhttps"
-        "github.com/hlhv/hlhv/wrangler"
+        "github.com/hlhv/hlhv-queen/conf"
+        "github.com/hlhv/hlhv-queen/srvhttps"
+        "github.com/hlhv/hlhv-queen/wrangler"
 )
 
 func main () {
@@ -15,9 +15,13 @@ func main () {
 }
 
 func start () {
+        arm()
+        fire() 
+}
+
+func arm () {
         var err error
 
-        if options.logLevel <= scribe.LogLevelNormal { printBanner() }
         scribe.PrintProgress(scribe.LogLevelNormal, "starting hlhv queen cell")
 
         err = conf.Load(options.confPath)
@@ -44,7 +48,9 @@ func start () {
                         "could not arm srvhttps: " + err.Error())
                 return
         }
+}
 
+func fire () {
         scribe.PrintProgress(scribe.LogLevelNormal, "firing")
         go wrangler.Fire()
         go srvhttps.Fire()

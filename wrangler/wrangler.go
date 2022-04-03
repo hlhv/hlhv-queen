@@ -13,8 +13,8 @@ import (
         "github.com/hlhv/scribe"
         "github.com/google/uuid"
         "github.com/hlhv/protocol"
-        "github.com/hlhv/hlhv/conf"
-        "github.com/hlhv/hlhv/cells"
+        "github.com/hlhv/hlhv-queen/conf"
+        "github.com/hlhv/hlhv-queen/cells"
 )
 
 var (

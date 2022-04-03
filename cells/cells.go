@@ -15,8 +15,8 @@ import (
         "github.com/hlhv/scribe"
         "github.com/google/uuid"
         "github.com/hlhv/protocol"
-        "github.com/hlhv/hlhv/conf"
-        "github.com/hlhv/hlhv/srvhttps"
+        "github.com/hlhv/hlhv-queen/conf"
+        "github.com/hlhv/hlhv-queen/srvhttps"
 )
 
 /* Cell represents a connection to a cell server. It should only be created in

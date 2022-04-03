@@ -6,7 +6,7 @@ import (
         "net/http"
         "crypto/tls"
         "github.com/hlhv/scribe"
-        "github.com/hlhv/hlhv/conf"
+        "github.com/hlhv/hlhv-queen/conf"
 )
 
 var (
