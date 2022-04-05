@@ -9,6 +9,7 @@ import (
 
 func main () {
         ParseArgs()
+        scribe.SetLogLevel(options.logLevel)
 
         go start()
         loop()
@@ -62,6 +63,6 @@ func fire () {
 
 func loop () {
         for {
-                scribe.ListenOnce(options.logLevel)
+                scribe.ListenOnce()
         }
 }
