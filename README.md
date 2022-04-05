@@ -22,7 +22,8 @@ it would be sent back to the end user.
 
 ## Usage
 
-Running the program will automatically load with the default
+Running the program will automatically load with the default options, unless
+specified.
 
 Run `hlhv --help` for detailed usage information.
 
@@ -39,7 +40,7 @@ self-signed certificate, you should create your own certificate authority** and
 give the root certificate to connecting cells. Instructions on how to do this
 can be found here:
 
-!(https://jamielinux.com/docs/openssl-certificate-authority/)
+<https://jamielinux.com/docs/openssl-certificate-authority/>
 
 The HLHV configuration tool ![wrench](https://github.com/hlhv/wrench) will
 eventually be able to perform this task automatically.
