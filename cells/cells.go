@@ -196,7 +196,7 @@ func (cell *Cell) HandleHTTP (
 
         nPort, _ := strconv.Atoi(req.URL.Port())
         frameHead := &protocol.FrameHTTPReqHead {
-                RemoteAddr: "",
+                RemoteAddr: req.RemoteAddr,
                 Method:     req.Method,
                 Scheme:     req.URL.Scheme,
                 Host:       req.URL.Hostname(),
