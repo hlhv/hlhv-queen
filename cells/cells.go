@@ -108,13 +108,7 @@ func (cell *Cell) handleOneFrame (
 
                 // mount
                 pattern := frame.Host + frame.Path
-                err = cell.MountFunc (pattern, func (
-                        res http.ResponseWriter,
-                        req *http.Request,
-                ) {
-                        cell.HandleHTTP(res, req)
-                        
-                })
+                err = cell.MountFunc(pattern, cell.HandleHTTP)
                 if err != nil { return err }
                 break
         
@@ -152,7 +146,7 @@ func (cell *Cell) Uuid () string {
  */
 func (cell *Cell) MountFunc (
         pattern string,
-        callback func(res http.ResponseWriter, req *http.Request),
+        callback func(http.ResponseWriter, *http.Request),
 ) (
         err error,
 ) {

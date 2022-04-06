@@ -79,27 +79,6 @@ func stripHostPort (h string) string {
         return host
 }
 
-/* Find a handler on a handler map given a path string.
- * Most-specific (longest) pattern wins.
- */
-func (mux *HolaMux) match (path string) (h http.Handler, pattern string) {
-        // Check for exact match first.
-        entry, matchExists := mux.exactEntries[path]
-        if matchExists {
-                return entry.handler, entry.pattern
-        }
-
-        // Check for longest valid match.  mux.es contains all patterns
-        // that end in / sorted from longest to shortest.
-        for _, entry := range mux.sortedEntries {
-                if strings.HasPrefix(path, entry.pattern) {
-                        return entry.handler, entry.pattern
-                }
-        }
-        
-        return nil, ""
-}
-
 /* redirectToPathSlash determines if the given path needs appending "/" to it.
  * This occurs when a handler for path + "/" was already registered, but
  * not for path itself. If the path needs appending to, it creates a new
@@ -173,23 +152,23 @@ func (mux *HolaMux) Handler (r *http.Request) (h http.Handler, pattern string) {
         // TODO: possibly remove all CONNECT support, because hlhv is not
         // designed to be a raw socket proxy.
         // CONNECT requests are not canonicalized.
-        if r.Method == "CONNECT" {
-                // If r.URL.Path is /tree and its handler is not registered,
-                // the /tree -> /tree/ redirect applies to CONNECT requests
-                // but the path canonicalization does not.
-                u, shouldRedirect := mux.redirectToPathSlash (
-                        r.URL.Host,
-                        r.URL.Path,
-                        r.URL)
-                if shouldRedirect {
-                        return http.RedirectHandler (
-                                        u.String(),
-                                        http.StatusMovedPermanently),
-                                u.Path
-                }
-
-                return mux.handlerInternal(r.Host, r.URL.Path)
-        }
+        // if r.Method == "CONNECT" {
+                // // If r.URL.Path is /tree and its handler is not registered,
+                // // the /tree -> /tree/ redirect applies to CONNECT requests
+                // // but the path canonicalization does not.
+                // u, shouldRedirect := mux.redirectToPathSlash (
+                        // r.URL.Host,
+                        // r.URL.Path,
+                        // r.URL)
+                // if shouldRedirect {
+                        // return http.RedirectHandler (
+                                        // u.String(),
+                                        // http.StatusMovedPermanently),
+                                // u.Path
+                // }
+// 
+                // return mux.handlerInternal(r.Host, r.URL.Path)
+        // }
 
         // All other requests have any port stripped and path cleaned
         // before passing to mux.handler.
@@ -248,6 +227,27 @@ func (mux *HolaMux) handlerInternal (
         return
 }
 
+/* Find a handler on a handler map given a path string.
+ * Most-specific (longest) pattern wins.
+ */
+func (mux *HolaMux) match (path string) (h http.Handler, pattern string) {
+        // Check for exact match first.
+        entry, matchExists := mux.exactEntries[path]
+        if matchExists {
+                return entry.handler, entry.pattern
+        }
+
+        // Check for longest valid match.  mux.es contains all patterns
+        // that end in / sorted from longest to shortest.
+        for _, entry := range mux.sortedEntries {
+                if strings.HasPrefix(path, entry.pattern) {
+                        return entry.handler, entry.pattern
+                }
+        }
+        
+        return nil, ""
+}
+
 /* ServeHTTP dispatches the request to the handler whose
  * pattern most closely matches the request URL.
  */
@@ -268,12 +268,12 @@ func (mux *HolaMux) ServeHTTP (w http.ResponseWriter, r *http.Request) {
         h.ServeHTTP(w, r)
 }
 
-/* Mount registers the handler for the given pattern, resolving all aliases. If
+/* mount registers the handler for the given pattern, resolving all aliases. If
  * the pattern is already registered, or the pattern is invalid, Mount returns
  * an error. If the pattern ends in a '/', it will match all unregistered
  * subpatterns.
  */
-func (mux *HolaMux) Mount (pattern string, handler http.Handler) error {
+func (mux *HolaMux) mount (pattern string, handler http.Handler) error {
         mux.mutex.Lock()
         defer mux.mutex.Unlock()
 
@@ -311,17 +311,34 @@ func (mux *HolaMux) Mount (pattern string, handler http.Handler) error {
         return nil
 }
 
+/* MountFunc creates a registry, and returns an error on fail
+ */
 func (mux *HolaMux) MountFunc (
         pattern string,
-        handler func(http.ResponseWriter, *http.Request),
+        handlerFunc func(http.ResponseWriter, *http.Request),
 ) (
         err error,
 ) {
-	if handler == nil {
+	if handlerFunc == nil {
 		return errors.New("mux: nil handler")
 	}
-	mux.Mount(pattern, http.HandlerFunc(handler))
-	return nil
+
+        patternPath := pattern[strings.IndexRune(pattern, '/'):]
+        scribe.PrintInfo(scribe.LogLevelNormal, patternPath)
+        handlerWrap := func (res http.ResponseWriter, req *http.Request) {
+                /* strip out pattern from URL. cell should receive the path as
+                 * if it began from root instead of the pattern.
+                 *
+                 * pattern/
+                 * /photos/dinosaurs -> /dinosaurs
+                 */
+                req.URL.Path = strings.Replace (
+                        req.URL.Path,
+                        patternPath, "/", 1)
+                handlerFunc(res, req)
+        }
+        
+	return mux.mount(pattern, http.HandlerFunc(handlerWrap))
 }
 
 /* Unmount removes a registry, and returns an error on fail.
@@ -351,6 +368,9 @@ func (mux *HolaMux) Unmount (pattern string) error {
         return nil
 }
 
+/* appendSorted appends an entry to a list of entries, inserting it into the
+ * proper sorted place.
+ */
 func appendSorted (entries []muxEntry, entry muxEntry) []muxEntry {
         entriesLen := len(entries)
         index := sort.Search(entriesLen, func(index int) bool {
