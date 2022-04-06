@@ -122,7 +122,7 @@ func handleConn (conn net.Conn) (err error) {
 
         switch frame.ConnKind {
         case protocol.ConnKindCell:
-                err = handleConnCell(conn, reader, writer)
+                err = handleConnCell(conn, reader, writer, frame.Key)
                 if err != nil {
                         conn.Close()
                         scribe.PrintDisconnect(scribe.LogLevelNormal, "kicked")
@@ -131,7 +131,7 @@ func handleConn (conn net.Conn) (err error) {
                 scribe.PrintDone(scribe.LogLevelNormal, "accepted cell")
                 break
         case protocol.ConnKindBand:
-                err = handleConnBand(conn, reader, writer, frame.Uuid)
+                err = handleConnBand(conn, reader, writer, frame.Uuid, frame.Key)
                 if err != nil {
                         conn.Close()
                         scribe.PrintDisconnect(scribe.LogLevelNormal, "kicked")
@@ -154,28 +154,11 @@ func handleConnCell (
         leash net.Conn,
         reader *fsock.Reader,
         writer *fsock.Writer,
+        key string,
 ) (
         err error,
 ) {
-        // read login key
         bumpTimeout(leash)
-        kind, data, err := protocol.ReadParseFrame(reader)
-        if kind != protocol.FrameKindKey {
-                return errors.New (fmt.Sprint (
-                        "cell sent strange kind code: ", kind))
-        }
-
-        frameKey := protocol.FrameKey {}
-        err = json.Unmarshal(data, &frameKey)
-        if err != nil {
-                return errors.New (fmt.Sprint (
-                        "error unmarshaling key frame: ", err.Error()))
-        }
-
-        if conf.CheckConnKey(frameKey.Key) != nil {
-                return errors.New (fmt.Sprint (
-                        "cell sent strange key: ", frameKey.Key))
-        }
 
         var cell *cells.Cell
 
@@ -221,23 +204,11 @@ func handleConnBand (
         reader *fsock.Reader,
         writer *fsock.Writer,
         uuid string,
+        key  string,
 ) (
         err error,
 ) {
-        // read session key
         bumpTimeout(conn)
-        kind, data, err := protocol.ReadParseFrame(reader)
-        if kind != protocol.FrameKindKey {
-                return errors.New (fmt.Sprint (
-                        "band sent strange kind code: ", kind))
-        }
-
-        frameKey := protocol.FrameKey {}
-        err = json.Unmarshal(data, &frameKey)
-        if err != nil {
-                return errors.New (fmt.Sprint (
-                        "error unmarshaling key frame: ", err.Error()))
-        }
 
         cell, exists := cellStore.lookup[uuid]
         if !exists {
@@ -248,7 +219,7 @@ func handleConnBand (
         band := cells.NewBand(conn, reader, writer)
 
         // add band to cell
-        err = cell.Bind(band, frameKey.Key)
+        err = cell.Bind(band, key)
         if err != nil { return err }
 
         // inform the band that it has been accepted

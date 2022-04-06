@@ -31,7 +31,7 @@ type Cell struct {
         bandsMutex sync.Mutex
         waitList   chan chan *Band
         
-        mounts *list.List
+        mount string
 
         sigQueue chan Sig
         
@@ -58,7 +58,6 @@ func NewCell (
                 Writer:   writer,
                 bands:    list.New(),
                 waitList: make(chan chan *Band, 64),
-                mounts:   list.New(),
                 sigQueue: make(chan Sig),
                 key:      keyString,
                 uuid:     uuidString,
@@ -113,13 +112,8 @@ func (cell *Cell) handleOneFrame (
                 break
         
         case protocol.FrameKindUnmount:
-                frame := protocol.FrameUnmount {}
-                err = json.Unmarshal(data, &frame)
-                if err != nil { return err }
-
                 // unmount
-                pattern := frame.Host + frame.Path
-                cell.Unmount(pattern)
+                cell.Unmount()
                 if err != nil { return err }
                 break
 
@@ -154,26 +148,19 @@ func (cell *Cell) MountFunc (
         if err != nil { return err }
 
         // add to mounts
-        cell.mounts.PushBack(pattern)
+        cell.mount = pattern
 
         return nil
 }
 
 /* Unmount is, for now, a wrapper around HolaMux.Unmount().
  */
-func (cell *Cell) Unmount (pattern string) (err error) {
-        err = srvhttps.Unmount(pattern)
-        if err != nil { return err }
+func (cell *Cell) Unmount () (err error) {
+        if cell.mount == "" { errors.New("cell is not mounted") }
 
-        // remove from mounts
-        curr := cell.mounts.Front()
-        for curr != nil {
-                if curr.Value.(string) == "" {
-                        cell.mounts.Remove(curr)
-                        break
-                }
-                curr = curr.Next()
-        }
+        err = srvhttps.Unmount(cell.mount)
+        if err != nil { return err }
+        cell.mount = ""
                 
         return nil
 }
@@ -456,8 +443,8 @@ func (cell *Cell) Prune () (pruned int) {
 
 /* cleanUp should be called when the leash closes, and only when the leash
  * closes. It calls the externally specified cleanup function (which should
- * remove the cell from a server-wide cell list), unmounts all mounts, and
- * shuts down all bands.
+ * remove the cell from a server-wide cell list), unmounts the cell, and shuts
+ * down all bands.
  */
 func (cell *Cell) cleanUp () {
         scribe.PrintProgress(scribe.LogLevelDebug, "cleaning up cell")
@@ -466,12 +453,8 @@ func (cell *Cell) cleanUp () {
         // stop listening for signals
         cell.SendSig(SigCleaning)
 
-        // unmount all
-        mount := cell.mounts.Front()
-        for mount != nil {
-                srvhttps.Unmount(mount.Value.(string))
-                mount = mount.Next()
-        }
+        // unmount
+        cell.Unmount()
         
         // close all bands immediately
         cell.bandsMutex.Lock()

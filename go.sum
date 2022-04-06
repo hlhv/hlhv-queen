@@ -7,6 +7,8 @@ github.com/hlhv/fsock v0.0.0-20220320042454-babab2fed524 h1:5UNBqsBznALoDDhcxfTV
 github.com/hlhv/fsock v0.0.0-20220320042454-babab2fed524/go.mod h1:JZLxqhthbuj6yK9VpKT3Qx3hmhs8ofcEew/yP8E6OoQ=
 github.com/hlhv/protocol v0.0.0-20220330070737-274ee87d6aa3 h1:uisbpSg+QVJXTMk08IbVXL6cR3uY/oGOPpfOTCcjxJ4=
 github.com/hlhv/protocol v0.0.0-20220330070737-274ee87d6aa3/go.mod h1:coT2nFBDjAgv3vw5DsLy1lFen2e+CQUsacURJJjdnr0=
+github.com/hlhv/protocol v0.0.0-20220406165615-ecb4cca7fefb h1:eIryb+eg3majDN2undKXafVycAli2aCCgDSgQO4qP0o=
+github.com/hlhv/protocol v0.0.0-20220406165615-ecb4cca7fefb/go.mod h1:coT2nFBDjAgv3vw5DsLy1lFen2e+CQUsacURJJjdnr0=
 github.com/hlhv/scribe v0.0.0-20220329213200-0b4286c92f42 h1:OsrtHchIZbB1gdMlOnmXepccRaHkwkU4yQllTNeu0Dc=
 github.com/hlhv/scribe v0.0.0-20220329213200-0b4286c92f42/go.mod h1:no+rCxthQ9inCEMt+rkUSCgpxDtvC62yzEzP9D+o/o4=
 github.com/hlhv/scribe v0.0.0-20220405004933-1bac59b62e42 h1:fpkDF4I+k7ezdltQiih2+JC6HUGqCd8YwTKp+HqHoUw=
