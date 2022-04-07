@@ -9,6 +9,7 @@ import (
         "strings"
         "net/url"
         "net/http"
+        "path/filepath"
         "github.com/hlhv/scribe"
         "github.com/hlhv/hlhv-queen/conf"
 )
@@ -80,8 +81,8 @@ func stripHostPort (h string) string {
 }
 
 /* redirectToPathSlash determines if the given path needs appending "/" to it.
- * This occurs when a handler for path + "/" was already registered, but
- * not for path itself. If the path needs appending to, it creates a new
+ * This should happen if the request is not for a file, because of the way that
+ * relative links work. If the path needs appending to, it creates a new
  * URL, setting the path to u.Path + "/" and returning true to indicate so.
  */
 func (mux *HolaMux) redirectToPathSlash (
@@ -92,45 +93,13 @@ func (mux *HolaMux) redirectToPathSlash (
         *url.URL,
         bool,
 ) {
-        mux.mutex.RLock()
-        shouldRedirect := mux.shouldRedirectRLocked(host, path)
-        mux.mutex.RUnlock()
-        
-        if !shouldRedirect {
+        if !filepath.Ext(path) == "" && path[len(path) - 1] != '/' {
                 return u, false
         }
         
         path = path + "/"
         u = &url.URL { Path: path, RawQuery: u.RawQuery }
         return u, true
-}
-
-/* shouldRedirectRLocked reports whether the given path and host should be
- * redirected to path+"/". This should happen if a handler is registered for
- * path+"/" but not path -- see comments at ServeMux.
- */
-func (mux *HolaMux) shouldRedirectRLocked (host, path string) bool {
-        pathTry := host + path
-
-        // check if path is handled
-        _, exists := mux.exactEntries[pathTry]
-        if exists {
-                return false
-        }
-
-        // if path is empty don't even bother
-        pathLen := len(path)
-        if pathLen == 0 {
-                return false
-        }
-
-        // check if path/ is handled
-        _, exists = mux.exactEntries[pathTry + "/"]
-        if exists {
-                return path[pathLen - 1] != '/'
-        }
-
-        return false
 }
 
 /* Handler returns the handler to use for the given request, consulting
