@@ -93,7 +93,7 @@ func (mux *HolaMux) redirectToPathSlash (
         *url.URL,
         bool,
 ) {
-        if !filepath.Ext(path) == "" && path[len(path) - 1] != '/' {
+        if path[len(path) - 1] == '/' || filepath.Ext(path) != "" {
                 return u, false
         }
         
