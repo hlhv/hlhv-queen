@@ -9,6 +9,8 @@ github.com/hlhv/protocol v0.0.0-20220330070737-274ee87d6aa3 h1:uisbpSg+QVJXTMk08
 github.com/hlhv/protocol v0.0.0-20220330070737-274ee87d6aa3/go.mod h1:coT2nFBDjAgv3vw5DsLy1lFen2e+CQUsacURJJjdnr0=
 github.com/hlhv/protocol v0.0.0-20220406165615-ecb4cca7fefb h1:eIryb+eg3majDN2undKXafVycAli2aCCgDSgQO4qP0o=
 github.com/hlhv/protocol v0.0.0-20220406165615-ecb4cca7fefb/go.mod h1:coT2nFBDjAgv3vw5DsLy1lFen2e+CQUsacURJJjdnr0=
+github.com/hlhv/protocol v0.0.0-20220408195126-613e0f5778a6 h1:tNB3aOazmX5nOy1p1NerBvTIPp9MatNoVxCPSn8o5gk=
+github.com/hlhv/protocol v0.0.0-20220408195126-613e0f5778a6/go.mod h1:coT2nFBDjAgv3vw5DsLy1lFen2e+CQUsacURJJjdnr0=
 github.com/hlhv/scribe v0.0.0-20220329213200-0b4286c92f42 h1:OsrtHchIZbB1gdMlOnmXepccRaHkwkU4yQllTNeu0Dc=
 github.com/hlhv/scribe v0.0.0-20220329213200-0b4286c92f42/go.mod h1:no+rCxthQ9inCEMt+rkUSCgpxDtvC62yzEzP9D+o/o4=
 github.com/hlhv/scribe v0.0.0-20220405004933-1bac59b62e42 h1:fpkDF4I+k7ezdltQiih2+JC6HUGqCd8YwTKp+HqHoUw=

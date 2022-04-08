@@ -7,6 +7,7 @@ import (
         "sync"
         "time"
         "errors"
+        "strings"
         "strconv"
         "net/http"
         "encoding/json"
@@ -175,6 +176,16 @@ func (cell *Cell) HandleHTTP (
 ) {
         scribe.PrintInfo(scribe.LogLevelDebug, "handling http request")
 
+        // build and normalize headers
+        headers := make(map[string] []string)
+        for key, value := range(req.Header) {
+                // make all keys lowercase. if there are two instances of a key
+                // with different cases, we need to combine them.
+                lowerKey := strings.ToLower(key)
+                headers[lowerKey] = append(headers[lowerKey], value...)
+        }
+        
+        
         nPort, _ := strconv.Atoi(req.URL.Port())
         frameHead := &protocol.FrameHTTPReqHead {
                 RemoteAddr: req.RemoteAddr,
@@ -188,8 +199,7 @@ func (cell *Cell) HandleHTTP (
                 Proto:      req.Proto,
                 ProtoMajor: req.ProtoMajor,
                 ProtoMinor: req.ProtoMinor,
-                Headers:    (map[string] []string)(req.Header),
-                Form:       nil, // TODO
+                Headers:    headers,
         }
 
         var band *Band
