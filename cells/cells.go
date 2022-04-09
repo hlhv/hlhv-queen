@@ -76,16 +76,18 @@ func (cell *Cell) Listen () {
                 if err != nil {
                         scribe.PrintError (
                                 scribe.LogLevelError,
-                                "error parsing frame:", err)
-                        continue
+                                "error parsing frame, kicking cell:", err)
+                        cell.leash.Close()
+                        break
                 }
                 err = cell.handleOneFrame(kind, data)
                 if err == io.EOF { break }
                 if err != nil {
                         scribe.PrintError (
                                 scribe.LogLevelError,
-                                "error handling frame:", err)
-                        continue
+                                "error handling frame, kicking cell:", err)
+                        cell.leash.Close()
+                        break
                 }
         }
 
