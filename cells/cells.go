@@ -232,15 +232,20 @@ func (cell *Cell) HandleHTTP (
 
         // write body to cell
         scribe.PrintProgress(scribe.LogLevelDebug, "sending body to cell")
+        bodyBuffer := make([]byte, 1024)
         for {
-                data := make([]byte, 1024)
-                _, err := req.Body.Read(data)
+                scribe.PrintProgress(scribe.LogLevelDebug, "reading body chunk")
+                bytesRead, err := req.Body.Read(bodyBuffer)
                 if err != nil { break }
+                
+                scribe.PrintProgress (
+                        scribe.LogLevelDebug,
+                        "writing body chunk of size", bytesRead)
                 
                 _, err = band.writer.WriteFrame (
                         append (
                                 []byte { byte(protocol.FrameKindHTTPReqBody) },
-                                data...
+                                bodyBuffer[:bytesRead]...
                         ),
                 )
                 
