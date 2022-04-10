@@ -232,48 +232,8 @@ func (cell *Cell) HandleHTTP (
                 
         }
 
-        // write body to cell
-        scribe.PrintProgress(scribe.LogLevelDebug, "sending body to cell")
-        bodyBuffer := make([]byte, 1024)
-        for {
-                scribe.PrintProgress(scribe.LogLevelDebug, "reading body chunk")
-                bytesRead, err := req.Body.Read(bodyBuffer)
-                if err != nil { break }
-                
-                scribe.PrintProgress (
-                        scribe.LogLevelDebug,
-                        "writing body chunk of size", bytesRead)
-                
-                _, err = band.writer.WriteFrame (
-                        append (
-                                []byte { byte(protocol.FrameKindHTTPReqBody) },
-                                bodyBuffer[:bytesRead]...
-                        ),
-                )
-                
-                if err != nil {
-                        band.Close()
-                        err = errors.New (fmt.Sprint (
-                                "band closed abruptly:", err))
-                        scribe.PrintError(scribe.LogLevelError, err)
-                        srvhttps.WriteBadGateway(res, req, err)
-                        return
-                }
-        }
-
-        // write end to cell
-        scribe.PrintProgress(scribe.LogLevelDebug, "sending end to cell")
-        _, err = band.WriteMarshalFrame(&protocol.FrameHTTPReqEnd {})
-        if err != nil {
-                band.Close()
-                err = errors.New(fmt.Sprint("band closed abruptly: ", err))
-                scribe.PrintError(scribe.LogLevelError, err)
-                srvhttps.WriteBadGateway(res, req, err)
-                return
-        }
-
-        // read head from cell
-        scribe.PrintProgress(scribe.LogLevelDebug, "reading head from cell")
+        // wait for cell response
+        scribe.PrintProgress(scribe.LogLevelDebug, "waiting for cell response")
         kind, data, err := band.ReadParseFrame()
         if err != nil {
                 band.Close()
@@ -282,6 +242,34 @@ func (cell *Cell) HandleHTTP (
                 return
         }
 
+        // check if cell wants body first
+        if kind == protocol.FrameKindHTTPResWant {
+                resWant := &protocol.FrameHTTPResWant {}
+                err = json.Unmarshal(data, resWant)
+        
+                // write body to cell
+                scribe.PrintInfo (
+                        scribe.LogLevelDebug,
+                        "cell wants " + strconv.Itoa(resWant.MaxSize) +
+                        " bytes of request body")
+
+                err = writeBodyToCell(res, req, band, resWant.MaxSize)
+                if err != nil {
+                        scribe.PrintError(scribe.LogLevelError, err)
+                        return
+                }
+
+                // wait for data again
+                kind, data, err = band.ReadParseFrame()
+                if err != nil {
+                        band.Close()
+                        scribe.PrintError(scribe.LogLevelError, err)
+                        srvhttps.WriteBadGateway(res, req, err)
+                        return
+                }
+        }
+
+        // read http head from cell
         if kind != protocol.FrameKindHTTPResHead {
                 band.Close()
                 err = errors.New (fmt.Sprint (        
@@ -355,6 +343,69 @@ func (cell *Cell) HandleHTTP (
         }
 
         return
+}
+
+/* writeBodyToCell writes the http request body to the cell.
+ */
+func writeBodyToCell (
+        res http.ResponseWriter,
+        req *http.Request,
+        band *Band,
+        maxSize int,
+) (
+        err error,
+) {
+        scribe.PrintProgress(scribe.LogLevelDebug, "sending body to cell")
+        
+        bodyBuffer := make([]byte, 1024)
+        totalRead := 0
+        limitReached := false
+        for !limitReached {
+                scribe.PrintProgress(scribe.LogLevelDebug, "reading body chunk")
+                bytesRead, err := req.Body.Read(bodyBuffer)
+                if err != nil { break }
+
+                totalRead += bytesRead
+                if totalRead > maxSize {
+                        scribe.PrintInfo(scribe.LogLevelDebug, "limit reached")
+                        bytesRead -= totalRead - maxSize
+                        if bytesRead < 0 { bytesRead = 0 }
+                        limitReached = true
+                }
+
+                
+                scribe.PrintProgress (
+                        scribe.LogLevelDebug,
+                        "writing body chunk of size", bytesRead)
+                
+                _, err = band.writer.WriteFrame (
+                        append (
+                                []byte { byte(protocol.FrameKindHTTPReqBody) },
+                                bodyBuffer[:bytesRead]...
+                        ),
+                )
+                
+                if err != nil {
+                        band.Close()
+                        err = errors.New (fmt.Sprint (
+                                "band closed abruptly:", err))
+                        srvhttps.WriteBadGateway(res, req, err)
+                        return err
+                }
+        }
+
+        // write end to cell
+        scribe.PrintProgress(scribe.LogLevelDebug, "sending end to cell")
+        _, err = band.WriteMarshalFrame(&protocol.FrameHTTPReqEnd {})
+        if err != nil {
+                band.Close()
+                err = errors.New(fmt.Sprint("band closed abruptly: ", err))
+                scribe.PrintError(scribe.LogLevelError, err)
+                srvhttps.WriteBadGateway(res, req, err)
+                return err
+        }
+
+        return nil
 }
 
 /* Bind adds a band to the cell, and fulfils a pending request for more.
