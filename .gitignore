@@ -9,6 +9,9 @@
 *.dylib
 /hlhv-queen
 
+# Log files
+hlhv.log
+
 # Test binary, built with `go test -c`
 *.test
 
