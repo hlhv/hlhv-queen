@@ -293,7 +293,6 @@ func (mux *HolaMux) MountFunc (
 	}
 
         patternPath := pattern[strings.IndexRune(pattern, '/'):]
-        scribe.PrintInfo(scribe.LogLevelNormal, patternPath)
         handlerWrap := func (res http.ResponseWriter, req *http.Request) {
                 /* strip out pattern from URL. cell should receive the path as
                  * if it began from root instead of the pattern.
