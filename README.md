@@ -1,5 +1,7 @@
 # hlhv-queen
 
+[![A+ Golang report card.](https://img.shields.io/badge/go%20report-A+-brightgreen.svg?style=flat)](https://goreportcard.com/report/github.com/hlhv/hlhv-queen)
+
 This is the HLHV queen cell. It's job is to route incoming HTTPS requests
 to other cells.
 
