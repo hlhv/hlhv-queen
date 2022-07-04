@@ -138,14 +138,18 @@ func Load(confpath string) (err error) {
 	}
 
 	file.Close()
+	analyzeConfig()
+	return nil
+}
 
+func analyzeConfig() {
 	if aliases.fallback != "" {
 		scribe.PrintInfo(
 			scribe.LogLevelDebug,
 			"using alias (fallback) -> "+aliases.fallback)
 	}
 
-	for key, val = range aliases.database {
+	for key, val := range aliases.database {
 		scribe.PrintInfo(
 			scribe.LogLevelDebug,
 			"using alias "+key+" -> "+val)
@@ -158,8 +162,6 @@ func Load(confpath string) (err error) {
 				"ATTACK!",
 		)
 	}
-
-	return nil
 }
 
 func handleKeyVal(key string, val string) {

@@ -244,6 +244,11 @@ func (cell *Cell) HandleHTTP(
 	if kind == protocol.FrameKindHTTPResWant {
 		resWant := &protocol.FrameHTTPResWant{}
 		err = json.Unmarshal(data, resWant)
+		if err != nil {
+			scribe.PrintError(scribe.LogLevelError, err)
+			return
+		}
+		
 
 		// write body to cell
 		scribe.PrintInfo(
@@ -281,6 +286,10 @@ func (cell *Cell) HandleHTTP(
 	// parse head
 	resHead := &protocol.FrameHTTPResHead{}
 	err = json.Unmarshal(data, resHead)
+	if err != nil {
+		scribe.PrintError(scribe.LogLevelError, err)
+		return
+	}
 
 	if resHead.StatusCode < 200 {
 		err = errors.New(fmt.Sprint(
