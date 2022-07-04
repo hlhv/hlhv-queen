@@ -219,8 +219,8 @@ func (cell *Cell) HandleHTTP(
 		Headers:    headers,
 	}
 
-	var band *Band
-	var err error
+	// get band and initiate communication
+	band, err := initiateHTTPRequest(res, req, cell, frameHead)
 
 	defer func() {
 		if band != nil {
@@ -228,28 +228,7 @@ func (cell *Cell) HandleHTTP(
 		}
 	}()
 
-	// get a band, and use it to send the request to the cell. if it didn't
-	// work, mark the band as closed and get a new one.
-	scribe.PrintProgress(scribe.LogLevelDebug, "sending header to cell")
-	for {
-		band, err = cell.Provide()
-		if err != nil {
-			err = errors.New(fmt.Sprint("server overload:", err))
-			scribe.PrintError(scribe.LogLevelError, err)
-			srvhttps.WriteServUnavail(res, req, err)
-			return
-		}
-
-		_, err = band.WriteMarshalFrame(frameHead)
-		if err == nil {
-			break
-		}
-		band.Close()
-		scribe.PrintInfo(
-			scribe.LogLevelDebug,
-			"detected closed band, asking for new one")
-
-	}
+	if err != nil { return }
 
 	// wait for cell response
 	scribe.PrintProgress(scribe.LogLevelDebug, "waiting for cell response")
@@ -319,10 +298,56 @@ func (cell *Cell) HandleHTTP(
 			res.Header().Add(key, value)
 		}
 	}
-	// write status code
+	
+	// send response
 	res.WriteHeader(resHead.StatusCode)
+	writeBodyFromCell(res, req, band)
+}
 
-	// pipe body from cell to client
+/* initiateHTTPRequest gets a band, and use it to send the request to the cell.
+ * if it didn't work, it marks the band as closed and get a new one.
+ */
+func initiateHTTPRequest (
+	res        http.ResponseWriter,
+	req       *http.Request,
+	cell      *Cell,
+	frameHead *protocol.FrameHTTPReqHead,
+) (
+	band *Band,
+	err error,
+) {
+	scribe.PrintProgress(scribe.LogLevelDebug, "sending header to cell")
+	for {
+		band, err = cell.Provide()
+		if err != nil {
+			err = errors.New(fmt.Sprint("server overload:", err))
+			scribe.PrintError(scribe.LogLevelError, err)
+			srvhttps.WriteServUnavail(res, req, err)
+			return
+		}
+
+		_, err = band.WriteMarshalFrame(frameHead)
+		if err == nil {
+			break
+		}
+		band.Close()
+		scribe.PrintInfo(
+			scribe.LogLevelDebug,
+			"detected closed band, asking for new one")
+
+	}
+
+	return
+}
+
+/* writeBodyFromCell pipes the response body from the cell to the client.
+ */
+func writeBodyFromCell(
+	res http.ResponseWriter,
+	req *http.Request,
+	band *Band,
+) {
+	
 	scribe.PrintProgress(scribe.LogLevelDebug, "piping body from cell")
 	for {
 		kind, data, err := band.ReadParseFrame()
@@ -360,8 +385,6 @@ func (cell *Cell) HandleHTTP(
 			return
 		}
 	}
-
-	return
 }
 
 /* writeBodyToCell writes the http request body to the cell.

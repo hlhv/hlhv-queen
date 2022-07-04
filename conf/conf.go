@@ -166,71 +166,40 @@ func handleKeyVal(key string, val string) {
 	valn, _ := strconv.Atoi(val)
 
 	switch key {
-	case "alias":
-		{
-			aliasSplit := strings.SplitN(val, "->", 2)
-			if len(aliasSplit) < 2 {
-				break
-			}
-			left := strings.TrimSpace(aliasSplit[0])
-			right := strings.TrimSpace(aliasSplit[1])
+	case "alias":   parseAlias(key, val)
+	case "unalias": delete(aliases.database, val)
 
-			if len(left) < 1 || len(right) < 1 {
-				break
-			}
+	case "keyPath":           items.database.keyPath = val
+	case "certPath":          items.database.certPath = val
+	case "connKey":           items.database.connKey = val
+	case "portHlhv":          items.database.portHlhv = valn
+	case "portHttps":         items.database.portHttps = valn
+	case "gardenFreq":        items.database.gardenFreq = valn
+	case "maxBandAge":        items.database.maxBandAge = valn
+	case "timeout":           items.database.timeout = valn
+	case "timeoutReadHeader": items.database.timeoutReadHeader = valn
+	case "timeoutRead":       items.database.timeoutRead = valn
+	case "timeoutWrite":      items.database.timeoutWrite = valn
+	case "timeoutIdle":       items.database.timeoutIdle = valn
+	}
+}
 
-			if left == "(fallback)" {
-				aliases.fallback = right
-			} else {
-				aliases.database[left] = right
-			}
+func parseAlias(key string, val string) {
+	aliasSplit := strings.SplitN(val, "->", 2)
+	if len(aliasSplit) < 2 {
+		return
+	}
+	left := strings.TrimSpace(aliasSplit[0])
+	right := strings.TrimSpace(aliasSplit[1])
 
-		}
-		break
+	if len(left) < 1 || len(right) < 1 {
+		return
+	}
 
-	case "unalias":
-		{
-			delete(aliases.database, val)
-		}
-		break
-
-	case "keyPath":
-		items.database.keyPath = val
-		break
-	case "certPath":
-		items.database.certPath = val
-		break
-	case "connKey":
-		items.database.connKey = val
-		break
-	case "portHlhv":
-		items.database.portHlhv = valn
-		break
-	case "portHttps":
-		items.database.portHttps = valn
-		break
-	case "gardenFreq":
-		items.database.gardenFreq = valn
-		break
-	case "maxBandAge":
-		items.database.maxBandAge = valn
-		break
-	case "timeout":
-		items.database.timeout = valn
-		break
-
-	case "timeoutReadHeader":
-		items.database.timeoutReadHeader = valn
-		break
-	case "timeoutRead":
-		items.database.timeoutRead = valn
-		break
-	case "timeoutWrite":
-		items.database.timeoutWrite = valn
-		break
-	case "timeoutIdle":
-		items.database.timeoutIdle = valn
-		break
+	if left == "(fallback)" {
+		aliases.fallback = right
+	} else {
+		aliases.database[left] = right
 	}
 }
 
