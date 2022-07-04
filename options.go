@@ -9,8 +9,9 @@ import (
 )
 
 var options struct {
-	logLevel scribe.LogLevel
-	confPath string
+	logLevel     scribe.LogLevel
+	confPath     string
+	logDirectory string
 }
 
 func ParseArgs() {
@@ -26,6 +27,13 @@ func ParseArgs() {
 		Help: "The amount of logs to produce. Debug prints " +
 			"everything, and none prints nothing",
 	})
+
+	logDirectory := parser.String("L", "log-directory", &argparse.Options{
+		Required: false,
+		Help: "The directory in which to store log files. If " +
+			"unspecified, logs will be written to stdout",
+	})
+
 
 	confPath := parser.String("", "conf-path", &argparse.Options{
 		Required: false,
@@ -56,4 +64,9 @@ func ParseArgs() {
 	}
 
 	options.confPath = *confPath
+
+	options.logDirectory = *logDirectory
+	if options.logDirectory != "" {
+		scribe.SetLogDirectory(options.logDirectory)
+	}
 }
