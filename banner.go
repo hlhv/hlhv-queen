@@ -1,12 +1,12 @@
 package main
 
 import (
-        "fmt"
+	"fmt"
 )
 
-func printBanner () {
-        fmt.Println (
-`       ________
+func printBanner() {
+	fmt.Println(
+		`       ________
       /        \
      /          \
     /            \________
