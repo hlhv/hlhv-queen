@@ -17,6 +17,8 @@ github.com/hlhv/scribe v0.0.0-20220329213200-0b4286c92f42 h1:OsrtHchIZbB1gdMlOnm
 github.com/hlhv/scribe v0.0.0-20220329213200-0b4286c92f42/go.mod h1:no+rCxthQ9inCEMt+rkUSCgpxDtvC62yzEzP9D+o/o4=
 github.com/hlhv/scribe v0.0.0-20220405004933-1bac59b62e42 h1:fpkDF4I+k7ezdltQiih2+JC6HUGqCd8YwTKp+HqHoUw=
 github.com/hlhv/scribe v0.0.0-20220405004933-1bac59b62e42/go.mod h1:no+rCxthQ9inCEMt+rkUSCgpxDtvC62yzEzP9D+o/o4=
+github.com/hlhv/scribe v0.0.0-20220704001419-53493afd2181 h1:LqDOdSPs9mZmQ84bxJSbGC8BPQRA0y0H5eFOtJwP48c=
+github.com/hlhv/scribe v0.0.0-20220704001419-53493afd2181/go.mod h1:no+rCxthQ9inCEMt+rkUSCgpxDtvC62yzEzP9D+o/o4=
 golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064 h1:S25/rfnfsMVgORT4/J61MJ7rdyseOZOyvLIrZEZ7s6s=
 golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=
 golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
