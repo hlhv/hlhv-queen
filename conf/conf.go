@@ -168,21 +168,35 @@ func handleKeyVal(key string, val string) {
 	valn, _ := strconv.Atoi(val)
 
 	switch key {
-	case "alias":   parseAlias(key, val)
-	case "unalias": delete(aliases.database, val)
+	case "alias":
+		parseAlias(key, val)
+	case "unalias":
+		delete(aliases.database, val)
 
-	case "keyPath":           items.database.keyPath = val
-	case "certPath":          items.database.certPath = val
-	case "connKey":           items.database.connKey = val
-	case "portHlhv":          items.database.portHlhv = valn
-	case "portHttps":         items.database.portHttps = valn
-	case "gardenFreq":        items.database.gardenFreq = valn
-	case "maxBandAge":        items.database.maxBandAge = valn
-	case "timeout":           items.database.timeout = valn
-	case "timeoutReadHeader": items.database.timeoutReadHeader = valn
-	case "timeoutRead":       items.database.timeoutRead = valn
-	case "timeoutWrite":      items.database.timeoutWrite = valn
-	case "timeoutIdle":       items.database.timeoutIdle = valn
+	case "keyPath":
+		items.database.keyPath = val
+	case "certPath":
+		items.database.certPath = val
+	case "connKey":
+		items.database.connKey = val
+	case "portHlhv":
+		items.database.portHlhv = valn
+	case "portHttps":
+		items.database.portHttps = valn
+	case "gardenFreq":
+		items.database.gardenFreq = valn
+	case "maxBandAge":
+		items.database.maxBandAge = valn
+	case "timeout":
+		items.database.timeout = valn
+	case "timeoutReadHeader":
+		items.database.timeoutReadHeader = valn
+	case "timeoutRead":
+		items.database.timeoutRead = valn
+	case "timeoutWrite":
+		items.database.timeoutWrite = valn
+	case "timeoutIdle":
+		items.database.timeoutIdle = valn
 	}
 }
 

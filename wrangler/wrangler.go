@@ -177,7 +177,7 @@ func handleConnCell(
 			break
 		}
 
-		// if by some wierd chance the uuid exists, make a new one
+		// if by some weird chance the uuid exists, make a new one
 	}
 
 	// inform the cell that it has been accepted, and give it the uuid

@@ -65,7 +65,7 @@ func (band *Band) Close() {
 	band.conn.Close()
 }
 
-/* TryLock attempts to lock the band, and returns whether it suceeded or not.
+/* TryLock attempts to lock the band, and returns whether it succeeded or not.
  * A mutex is not used because if this function were blocking, a request might
  * have to wait for a huge file download to complete before being given a band.
  */

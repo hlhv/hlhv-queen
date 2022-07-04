@@ -34,7 +34,6 @@ func ParseArgs() {
 			"unspecified, logs will be written to stdout",
 	})
 
-
 	confPath := parser.String("", "conf-path", &argparse.Options{
 		Required: false,
 		Default:  "/etc/hlhv/hlhv.conf",

@@ -228,7 +228,9 @@ func (cell *Cell) HandleHTTP(
 		}
 	}()
 
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 
 	// wait for cell response
 	scribe.PrintProgress(scribe.LogLevelDebug, "waiting for cell response")
@@ -248,7 +250,6 @@ func (cell *Cell) HandleHTTP(
 			scribe.PrintError(scribe.LogLevelError, err)
 			return
 		}
-		
 
 		// write body to cell
 		scribe.PrintInfo(
@@ -307,7 +308,7 @@ func (cell *Cell) HandleHTTP(
 			res.Header().Add(key, value)
 		}
 	}
-	
+
 	// send response
 	res.WriteHeader(resHead.StatusCode)
 	writeBodyFromCell(res, req, band)
@@ -316,10 +317,10 @@ func (cell *Cell) HandleHTTP(
 /* initiateHTTPRequest gets a band, and use it to send the request to the cell.
  * if it didn't work, it marks the band as closed and get a new one.
  */
-func initiateHTTPRequest (
-	res        http.ResponseWriter,
-	req       *http.Request,
-	cell      *Cell,
+func initiateHTTPRequest(
+	res http.ResponseWriter,
+	req *http.Request,
+	cell *Cell,
 	frameHead *protocol.FrameHTTPReqHead,
 ) (
 	band *Band,
@@ -356,7 +357,7 @@ func writeBodyFromCell(
 	req *http.Request,
 	band *Band,
 ) {
-	
+
 	scribe.PrintProgress(scribe.LogLevelDebug, "piping body from cell")
 	for {
 		kind, data, err := band.ReadParseFrame()
