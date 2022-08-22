@@ -203,6 +203,13 @@ func (cell *Cell) HandleHTTP(
 		headers[lowerKey] = append(headers[lowerKey], value...)
 	}
 
+	// build cookies
+	cookies := make(map[string][]string)
+	for _, cookie := range req.Cookies() {
+		key := cookie.Name
+		cookies[key] = append(cookies[key], cookie.Value)
+	}
+
 	nPort, _ := strconv.Atoi(req.URL.Port())
 	frameHead := &protocol.FrameHTTPReqHead{
 		RemoteAddr: req.RemoteAddr,
@@ -217,6 +224,7 @@ func (cell *Cell) HandleHTTP(
 		ProtoMajor: req.ProtoMajor,
 		ProtoMinor: req.ProtoMinor,
 		Headers:    headers,
+		Cookies:    cookies,
 	}
 
 	// get band and initiate communication
