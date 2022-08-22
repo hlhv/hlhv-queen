@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+	"syscall"
+	"os/signal"
 	"github.com/hlhv/hlhv-queen/conf"
 	"github.com/hlhv/hlhv-queen/srvhttps"
 	"github.com/hlhv/hlhv-queen/wrangler"
@@ -11,13 +14,25 @@ func main() {
 	ParseArgs()
 	scribe.SetLogLevel(options.logLevel)
 
-	go start()
-	loop()
-}
-
-func start() {
 	arm()
 	fire()
+
+	// create sigint handler
+	sigintNotify := make(chan os.Signal, 1)
+	signal.Notify(sigintNotify, os.Interrupt, syscall.SIGTERM)
+
+	// TODO: these messages do not print because the queen shuts down before
+	// scribe can print them. need to find some way to wait for scribe to
+	// flush everything and then exit.
+	
+	<- sigintNotify
+	scribe.PrintProgress(scribe.LogLevelNormal, "shutting down")
+
+	// TODO: if in the future the queen cell needs to do any shutdown
+	// processes, do so here.
+		
+	scribe.PrintDone(scribe.LogLevelNormal, "exiting")
+	os.Exit(0)
 }
 
 func arm() {
@@ -59,10 +74,4 @@ func fire() {
 	scribe.PrintDone(
 		scribe.LogLevelNormal,
 		"startup sequence complete, resuming normal operation")
-}
-
-func loop() {
-	for {
-		scribe.ListenOnce()
-	}
 }
