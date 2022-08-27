@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-var (
-	mux    *HolaMux
-	server *http.Server
-	port   string
-)
+var mux *HolaMux
+var server *http.Server
+var port string
+var stopNotify chan int
+var listening bool
 
 func Arm() (err error) {
 	port = strconv.Itoa(conf.GetPortHttps())
@@ -58,10 +58,38 @@ func Arm() (err error) {
 }
 
 func Fire() {
+	scribe.PrintInfo(
+		scribe.LogLevelDebug,
+		"srvhttps listening")
+	listening = true
+	defer func() {
+		listening = false
+		scribe.PrintInfo(
+			scribe.LogLevelDebug,
+			"srvhttps no longer listening")
+	}()
+
 	keyPath := conf.GetKeyPath()
 	certPath := conf.GetCertPath()
 	exitMsg := server.ListenAndServeTLS(certPath, keyPath)
-	scribe.PrintFatal(scribe.LogLevelError, exitMsg.Error())
+
+	if stopNotify == nil {
+		scribe.PrintFatal(scribe.LogLevelError, exitMsg.Error())
+	} else {
+		stopNotify <- 0
+	}
+}
+
+func Close() {
+	if !listening {
+		return
+	}
+
+	scribe.PrintProgress(scribe.LogLevelNormal, "stopping https server")
+	stopNotify = make(chan int)
+	server.Close()
+	<-stopNotify
+	scribe.PrintDone(scribe.LogLevelNormal, "stopped https server")
 }
 
 func MountFunc(

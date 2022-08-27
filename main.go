@@ -1,13 +1,13 @@
 package main
 
 import (
-	"os"
-	"syscall"
-	"os/signal"
 	"github.com/hlhv/hlhv-queen/conf"
 	"github.com/hlhv/hlhv-queen/srvhttps"
 	"github.com/hlhv/hlhv-queen/wrangler"
 	"github.com/hlhv/scribe"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -20,12 +20,12 @@ func main() {
 	// create sigint handler
 	sigintNotify := make(chan os.Signal, 1)
 	signal.Notify(sigintNotify, os.Interrupt, syscall.SIGTERM)
-	<- sigintNotify
+	<-sigintNotify
 	scribe.PrintProgress(scribe.LogLevelNormal, "shutting down")
 
-	// TODO: if in the future the queen cell needs to do any shutdown
-	// processes, do so here.
-		
+	srvhttps.Close()
+	wrangler.Close()
+
 	scribe.PrintDone(scribe.LogLevelNormal, "exiting")
 	scribe.Stop()
 	os.Exit(0)

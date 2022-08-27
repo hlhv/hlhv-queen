@@ -12,22 +12,27 @@ import (
 	"github.com/hlhv/protocol"
 	"github.com/hlhv/scribe"
 	"net"
+	"os"
 	"strconv"
 	"sync"
 	"time"
 )
 
-var (
-	port   string
-	cert   tls.Certificate
-	config tls.Config
-)
+var port string
+var cert tls.Certificate
+var config tls.Config
+var listening bool
+var stopNotify chan int
+var server net.Listener
 
 var cellStore struct {
 	lookup map[string]*cells.Cell
 	mutex  sync.Mutex
 }
 
+/* Arm initializes the cell wrangler, loading the certificate and initializing
+ * maps.
+ */
 func Arm() (err error) {
 	port = strconv.Itoa(conf.GetPortHlhv())
 	scribe.PrintProgress(
@@ -55,25 +60,44 @@ func Arm() (err error) {
  * wrangler has been Arm()'d.
  */
 func Fire() {
-	server, err := tls.Listen("tcp", ":"+port, &config)
+	scribe.PrintInfo(
+		scribe.LogLevelDebug,
+		"wrangler listening")
+	listening = true
+	defer func() {
+		listening = false
+		scribe.PrintInfo(
+			scribe.LogLevelDebug,
+			"wrangler no longer listening")
+	}()
+
+	var err error
+	server, err = tls.Listen("tcp", ":"+port, &config)
 	if err != nil {
 		scribe.PrintFatal(scribe.LogLevelError, err.Error())
 		return
 	}
-	defer server.Close()
 
 	go Garden()
 
 	for {
 		conn, err := server.Accept()
-		scribe.PrintConnect(scribe.LogLevelNormal, "new connection")
-		if err != nil {
-			scribe.PrintError(
-				scribe.LogLevelError,
-				"wrangler accept:", err)
-			continue
+
+		// if we are stopping, exit cleanly
+		if stopNotify != nil {
+			stopNotify <- 0
+			return
 		}
 
+		if err != nil {
+			scribe.PrintFatal(
+				scribe.LogLevelError,
+				"wrangler accept:", err)
+			return
+			// TODO: maybe re-create the listener?
+		}
+
+		scribe.PrintConnect(scribe.LogLevelNormal, "new connection")
 		err = handleConn(conn)
 
 		if err != nil {
@@ -83,6 +107,21 @@ func Fire() {
 			continue
 		}
 	}
+}
+
+/* Close stops the cell wrangler from accepting new cell connections. The fire
+ * function should not be called again after calling this.
+ */
+func Close() {
+	if !listening {
+		return
+	}
+
+	scribe.PrintProgress(scribe.LogLevelNormal, "stopping cell wrangler")
+	stopNotify = make(chan int)
+	server.Close()
+	<-stopNotify
+	scribe.PrintDone(scribe.LogLevelNormal, "stopped cell wrangler")
 }
 
 /* handleConn takes in an incoming connection, and decides what to do with it.
@@ -240,6 +279,12 @@ func handleConnBand(
 func Garden() {
 	for {
 		time.Sleep(time.Duration(conf.GetGardenFreq()) * time.Second)
+
+		// if the cell is not listening, we can safely stop gardening.
+		if !listening {
+			return
+		}
+
 		pruned := 0
 		scribe.PrintProgress(scribe.LogLevelDebug, "pruning cell bands")
 		for _, cell := range cellStore.lookup {
@@ -250,6 +295,7 @@ func Garden() {
 	scribe.PrintFatal(
 		scribe.LogLevelError,
 		"gardener has stopped, will not attempt to run without it!")
+	os.Exit(1)
 }
 
 /* This function is called by cells when their leashes close. It removes the
