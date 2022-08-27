@@ -20,11 +20,6 @@ func main() {
 	// create sigint handler
 	sigintNotify := make(chan os.Signal, 1)
 	signal.Notify(sigintNotify, os.Interrupt, syscall.SIGTERM)
-
-	// TODO: these messages do not print because the queen shuts down before
-	// scribe can print them. need to find some way to wait for scribe to
-	// flush everything and then exit.
-	
 	<- sigintNotify
 	scribe.PrintProgress(scribe.LogLevelNormal, "shutting down")
 
@@ -32,6 +27,7 @@ func main() {
 	// processes, do so here.
 		
 	scribe.PrintDone(scribe.LogLevelNormal, "exiting")
+	scribe.Stop()
 	os.Exit(0)
 }
 
